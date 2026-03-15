@@ -63,6 +63,16 @@ Query, modify, and inspect MySQL databases via `mysql-cli`, a smart wrapper with
 - Output as table, CSV, JSON, or vertical format
 
 
+### playwright-cli
+
+Automates browser interactions for web testing, form filling, screenshots, and data extraction via the `playwright-cli` CLI.
+
+- Navigate websites, click elements, fill forms, take screenshots and PDFs
+- Session management for isolating browser profiles across projects
+- Request mocking, tracing, video recording, and storage state management
+- Test code generation from interactive browser sessions
+
+
 ### markitdown
 
 Convert various file formats (PDF, DOCX, XLSX, PPTX, HTML, images, etc.) to Markdown via CLI.

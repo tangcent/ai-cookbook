@@ -172,4 +172,5 @@ After installation, some MCPs may still have placeholder values that need to be 
 | git-workflow | Branch prefixes, conventional commits, sync operations |
 | github-cli | Interact with GitHub via the `gh` CLI |
 | mysql-cli | Query, modify, and inspect MySQL with multi-instance auto-routing |
+| playwright-cli | Browser automation for web testing, form filling, screenshots, and data extraction |
 | markitdown | Convert various file formats to Markdown via CLI |
