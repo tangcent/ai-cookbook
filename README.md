@@ -2,6 +2,18 @@
 
 A curated collection of AI skills, practical tips, and Markdown documentation — featuring recommended MCP (Model Context Protocol) configurations, examples, and best practices.
 
+## Quick Start
+
+1. Clone this repository
+
+```bash
+git clone https://github.com/tangcent/ai-cookbook.git
+cd ai-cookbook
+```
+
+2. Tell your AI: "install ai-cookbook"
+<!-- AI: Run install/INSTALL.md to install all skills and MCPs -->
+
 ## Install
 
 Install MCPs, CLIs, and Skills into your AI coding tools (Kiro, Claude Code, Cline, OpenCode, Tare, Antigravity) with the interactive guide:
