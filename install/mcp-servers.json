@@ -1,0 +1,22 @@
+{
+  "chrome-devtools": {
+    "command": "npx",
+    "args": ["-y", "chrome-devtools-mcp@latest"],
+    "env": {}
+  },
+  "grafana": {
+    "command": "${grafana_command:-/path/to/mcp-grafana}",
+    "args": [],
+    "env": {
+      "GRAFANA_URL": "${grafana_url:-http://your-grafana-instance.com}",
+      "GRAFANA_USERNAME": "${grafana_username:-<email>}",
+      "GRAFANA_PASSWORD": "${grafana_password:-<password>}",
+      "GRAFANA_ORG_ID": "${grafana_org_id:-1}"
+    }
+  },
+  "maven-indexer": {
+    "command": "npx",
+    "args": ["-y", "maven-indexer-mcp@latest"],
+    "env": {}
+  }
+}

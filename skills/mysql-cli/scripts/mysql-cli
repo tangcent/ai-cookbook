@@ -1,0 +1,599 @@
+#!/usr/bin/env bash
+# mysql-cli — Smart MySQL CLI wrapper with multi-instance support,
+#              metadata caching, and automatic database resolution.
+#              Supports SELECT, DDL, DML, and .sql file execution.
+
+set -euo pipefail
+
+PROG="$(basename "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Default paths — config lives in home dir, metadata next to script
+DEFAULT_CNF="$HOME/.mysql-instances.cnf"
+METADATA_DIR="$SCRIPT_DIR/../.metadata"
+
+EXAMPLE_CONFIG='# mysql-cli instance configuration
+# Each [section] defines a named MySQL instance.
+# The "databases" key is optional — if set, only those databases are scanned.
+#
+# [dev-master]
+# host=127.0.0.1
+# port=3306
+# user=root
+# password=your_password
+# charset=utf8mb4
+# databases=app_db,user_db
+#
+# [test-readonly]
+# host=10.0.1.100
+# port=3306
+# user=readonly
+# password=readonly_pass
+# databases=order_db,payment_db
+'
+
+usage() {
+  cat <<'USAGE'
+mysql-cli — Smart MySQL wrapper with multi-instance & auto-routing
+
+Usage:
+  mysql-cli [options] <command> [args...]
+
+Commands:
+  instances                         List configured MySQL instances
+  dbs       [--instance <name>]     List databases (all or per instance)
+  tables    [--instance <name>]     List tables (all or per instance)
+            [--db <database>]
+  exec      <sql>                   Execute any SQL (SELECT/DDL/DML, auto-routes)
+            [--instance <name>]     Force specific instance
+            [--db <database>]       Force specific database
+  file      <path.sql>              Execute a .sql file
+            [--instance <name>]     Force specific instance
+            [--db <database>]       Force specific database
+  refresh   [--instance <name>]     Refresh cached metadata
+  desc      <table>                 Describe table structure
+            [--instance <name>]
+            [--db <database>]
+
+Options:
+  -c, --config <file>    Config file (default: ~/.mysql-instances.cnf)
+  -f, --format <fmt>     Output format: table (default), csv, json, raw
+  --vertical             Use \G vertical output
+  --limit <n>            Append LIMIT n to SELECT queries (default: none)
+  --dry-run              Show resolved mysql command without executing
+  --help                 Show this help
+
+Config file format (INI-style, one [section] per instance):
+
+  [prod-master]
+  host=10.0.1.100
+  port=3306
+  user=readonly
+  password=secret
+  databases=app_db,log_db
+
+  [test-db]
+  host=10.0.2.50
+  port=3306
+  user=root
+  password=root123
+
+Environment variables:
+  MYSQL_CLI_CONFIG    Override default config file path
+  MYSQL_CLI_INSTANCE  Default instance name (skip --instance)
+USAGE
+}
+
+die() { echo "[$PROG] Error: $*" >&2; exit 1; }
+
+# ── Config bootstrap ───────────────────────────────────────────────
+# Creates ~/.mysql-instances.cnf with example content if missing.
+# Exits with guidance if the file exists but has no instance sections.
+
+ensure_config() {
+  local config_file="$1"
+
+  if [[ ! -f "$config_file" ]]; then
+    echo "[$PROG] Config file not found. Creating: $config_file" >&2
+    printf '%s' "$EXAMPLE_CONFIG" > "$config_file"
+    chmod 600 "$config_file"
+    echo "[$PROG] Please edit $config_file to add your MySQL instances, then re-run." >&2
+    exit 1
+  fi
+
+  # Check if file has any [section] headers (i.e. actual instances)
+  if ! grep -qE '^\[.+\]' "$config_file"; then
+    echo "[$PROG] Config file is empty or has no instances: $config_file" >&2
+    echo "[$PROG] Please edit it to add at least one [instance] section, then re-run." >&2
+    echo "" >&2
+    echo "Example:" >&2
+    echo "  [my-db]" >&2
+    echo "  host=127.0.0.1" >&2
+    echo "  port=3306" >&2
+    echo "  user=root" >&2
+    echo "  password=secret" >&2
+    exit 1
+  fi
+}
+
+# ── Config parser ──────────────────────────────────────────────────
+
+declare -a INSTANCE_NAMES=()
+
+parse_config() {
+  local config_file="$1"
+  ensure_config "$config_file"
+
+  local current_section=""
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    [[ -z "$line" || "$line" == \#* ]] && continue
+
+    if [[ "$line" =~ ^\[([a-zA-Z0-9_-]+)\]$ ]]; then
+      current_section="${BASH_REMATCH[1]}"
+      INSTANCE_NAMES+=("$current_section")
+    elif [[ -n "$current_section" && "$line" =~ ^([a-zA-Z_]+)=(.*)$ ]]; then
+      local key="${BASH_REMATCH[1]}"
+      local value="${BASH_REMATCH[2]}"
+      local safe_section="${current_section//-/_}"
+      eval "INST_${safe_section}_${key}=\"\$value\""
+    fi
+  done < "$config_file"
+
+  [[ ${#INSTANCE_NAMES[@]} -gt 0 ]] || die "No instances found in config file"
+}
+
+get_inst_var() {
+  local inst="$1" key="$2"
+  local safe_inst="${inst//-/_}"
+  local var_name="INST_${safe_inst}_${key}"
+  if eval "[ -z \"\${${var_name}+x}\" ]"; then
+    echo ""
+  else
+    eval "echo \"\${${var_name}}\""
+  fi
+}
+
+# ── MySQL connection helpers ───────────────────────────────────────
+
+build_mysql_args() {
+  local instance="$1"
+  local db="${2:-}"
+  local args=()
+
+  local host; host="$(get_inst_var "$instance" host)"
+  local port; port="$(get_inst_var "$instance" port)"
+  local user; user="$(get_inst_var "$instance" user)"
+  local password; password="$(get_inst_var "$instance" password)"
+  local socket; socket="$(get_inst_var "$instance" socket)"
+  local charset; charset="$(get_inst_var "$instance" charset)"
+
+  [[ -n "$host" ]] && args+=(-h "$host")
+  [[ -n "$port" ]] && args+=(-P "$port")
+  [[ -n "$user" ]] && args+=(-u "$user")
+  [[ -n "$password" ]] && args+=(-p"$password")
+  [[ -n "$socket" ]] && args+=(-S "$socket")
+  [[ -n "$charset" ]] && args+=(--default-character-set="$charset")
+  [[ -n "$db" ]] && args+=("$db")
+
+  echo "${args[@]}"
+}
+
+run_mysql() {
+  local instance="$1"
+  local db="${2:-}"
+  shift 2
+  local query="$*"
+
+  local -a args=()
+  local host; host="$(get_inst_var "$instance" host)"
+  local port; port="$(get_inst_var "$instance" port)"
+  local user; user="$(get_inst_var "$instance" user)"
+  local password; password="$(get_inst_var "$instance" password)"
+  local socket; socket="$(get_inst_var "$instance" socket)"
+  local charset; charset="$(get_inst_var "$instance" charset)"
+
+  [[ -n "$host" ]] && args+=(-h "$host")
+  [[ -n "$port" ]] && args+=(-P "$port")
+  [[ -n "$user" ]] && args+=(-u "$user")
+  [[ -n "$password" ]] && args+=(-p"$password")
+  [[ -n "$socket" ]] && args+=(-S "$socket")
+  [[ -n "$charset" ]] && args+=(--default-character-set="$charset")
+  [[ -n "$db" ]] && args+=("$db")
+
+  mysql "${args[@]}" -e "$query" 2> >(grep -v '^\(mysql\|WARNING\).*password.*insecure' >&2)
+}
+
+run_mysql_file() {
+  local instance="$1"
+  local db="${2:-}"
+  local sql_file="$3"
+
+  local -a args=()
+  local host; host="$(get_inst_var "$instance" host)"
+  local port; port="$(get_inst_var "$instance" port)"
+  local user; user="$(get_inst_var "$instance" user)"
+  local password; password="$(get_inst_var "$instance" password)"
+  local socket; socket="$(get_inst_var "$instance" socket)"
+  local charset; charset="$(get_inst_var "$instance" charset)"
+
+  [[ -n "$host" ]] && args+=(-h "$host")
+  [[ -n "$port" ]] && args+=(-P "$port")
+  [[ -n "$user" ]] && args+=(-u "$user")
+  [[ -n "$password" ]] && args+=(-p"$password")
+  [[ -n "$socket" ]] && args+=(-S "$socket")
+  [[ -n "$charset" ]] && args+=(--default-character-set="$charset")
+  [[ -n "$db" ]] && args+=("$db")
+
+  mysql "${args[@]}" < "$sql_file" 2> >(grep -v '^\(mysql\|WARNING\).*password.*insecure' >&2)
+}
+
+# ── Metadata management ───────────────────────────────────────────
+
+ensure_metadata_dir() {
+  mkdir -p "$METADATA_DIR"
+}
+
+metadata_file() {
+  local instance="$1"
+  echo "$METADATA_DIR/${instance}.tables"
+}
+
+refresh_metadata_for_instance() {
+  local instance="$1"
+  ensure_metadata_dir
+
+  local allowed_dbs; allowed_dbs="$(get_inst_var "$instance" databases)"
+  local meta_file; meta_file="$(metadata_file "$instance")"
+
+  local all_dbs
+  all_dbs="$(run_mysql "$instance" "" "SHOW DATABASES" 2>/dev/null | tail -n +2)" || {
+    echo "[$PROG] Warning: cannot connect to instance '$instance'" >&2
+    return 1
+  }
+
+  local dbs_to_scan=()
+  if [[ -n "$allowed_dbs" ]]; then
+    IFS=',' read -ra restricted <<< "$allowed_dbs"
+    for db in "${restricted[@]}"; do
+      db="$(echo "$db" | xargs)"
+      dbs_to_scan+=("$db")
+    done
+  else
+    while IFS= read -r db; do
+      case "$db" in
+        information_schema|performance_schema|mysql|sys) continue ;;
+      esac
+      dbs_to_scan+=("$db")
+    done <<< "$all_dbs"
+  fi
+
+  > "$meta_file"
+  for db in "${dbs_to_scan[@]}"; do
+    local tables
+    tables="$(run_mysql "$instance" "$db" "SHOW TABLES" 2>/dev/null | tail -n +2)" || continue
+    while IFS= read -r tbl; do
+      [[ -n "$tbl" && "$tbl" != Tables_in_* ]] && echo "${instance}|${db}|${tbl}" >> "$meta_file"
+    done <<< "$tables"
+  done
+
+  local count
+  count="$(wc -l < "$meta_file" | xargs)"
+  echo "[$PROG] Refreshed '$instance': $count tables indexed"
+}
+
+refresh_all_metadata() {
+  for inst in "${INSTANCE_NAMES[@]}"; do
+    refresh_metadata_for_instance "$inst"
+  done
+}
+
+ensure_metadata() {
+  local needs_refresh=0
+  for inst in "${INSTANCE_NAMES[@]}"; do
+    local mf; mf="$(metadata_file "$inst")"
+    if [[ ! -f "$mf" ]]; then
+      needs_refresh=1
+      break
+    fi
+  done
+  if [[ $needs_refresh -eq 1 ]]; then
+    echo "[$PROG] First run — building metadata cache..." >&2
+    refresh_all_metadata
+  fi
+}
+
+# ── Table lookup & resolution ─────────────────────────────────────
+
+lookup_table() {
+  local table_name="$1"
+  local instance_filter="${2:-}"
+
+  for inst in "${INSTANCE_NAMES[@]}"; do
+    [[ -n "$instance_filter" && "$inst" != "$instance_filter" ]] && continue
+    local mf; mf="$(metadata_file "$inst")"
+    [[ -f "$mf" ]] || continue
+    grep "|${table_name}$" "$mf" 2>/dev/null || true
+  done
+}
+
+extract_tables_from_sql() {
+  local sql="$1"
+  # Extract table names after SQL keywords. Uses awk for portable case-insensitive matching.
+  echo "$sql" | grep -oiE '(FROM|JOIN|INTO|UPDATE|TABLE|DESC|DESCRIBE)\s+`?[a-zA-Z_][a-zA-Z0-9_]*`?' \
+    | awk '{sub(/^[^ \t]+[ \t]+`?/, ""); sub(/`?$/, ""); print}' \
+    | sort -u
+}
+
+resolve_target() {
+  local sql="$1"
+  local force_instance="${2:-}"
+  local force_db="${3:-}"
+
+  if [[ -n "$force_instance" && -n "$force_db" ]]; then
+    echo "${force_instance}|${force_db}"
+    return 0
+  fi
+
+  local tables
+  tables="$(extract_tables_from_sql "$sql")"
+
+  if [[ -z "$tables" ]]; then
+    if [[ -n "$force_instance" ]]; then
+      echo "${force_instance}|${force_db}"
+      return 0
+    fi
+    die "Cannot determine target table from SQL. Use --instance and --db."
+  fi
+
+  local primary_table
+  primary_table="$(echo "$tables" | head -1)"
+
+  local matches
+  matches="$(lookup_table "$primary_table" "$force_instance")"
+
+  if [[ -z "$matches" ]]; then
+    echo "[$PROG] Table '$primary_table' not in cache, refreshing metadata..." >&2
+    if [[ -n "$force_instance" ]]; then
+      refresh_metadata_for_instance "$force_instance"
+    else
+      refresh_all_metadata
+    fi
+    matches="$(lookup_table "$primary_table" "$force_instance")"
+  fi
+
+  if [[ -z "$matches" ]]; then
+    die "Table '$primary_table' not found in any instance/database."
+  fi
+
+  local match_count
+  match_count="$(echo "$matches" | wc -l | xargs)"
+
+  if [[ "$match_count" -eq 1 ]]; then
+    local inst db
+    inst="$(echo "$matches" | cut -d'|' -f1)"
+    db="$(echo "$matches" | cut -d'|' -f2)"
+    echo "${inst}|${db}"
+    return 0
+  fi
+
+  echo "[$PROG] Table '$primary_table' found in multiple locations:" >&2
+  local i=1
+  while IFS='|' read -r inst db _tbl; do
+    echo "  $i) $inst / $db" >&2
+    ((i++))
+  done <<< "$matches"
+  echo "" >&2
+  echo "Please specify with --instance <name> and/or --db <database>" >&2
+  exit 1
+}
+
+# ── Output formatting ─────────────────────────────────────────────
+
+format_output() {
+  local raw="$1"
+  local fmt="$2"
+  local vertical="$3"
+
+  case "$fmt" in
+    raw|table)
+      echo "$raw"
+      ;;
+    csv)
+      echo "$raw" | sed 's/\t/,/g'
+      ;;
+    json)
+      if command -v python3 >/dev/null 2>&1; then
+        echo "$raw" | python3 -c "
+import sys, json
+lines = [l for l in sys.stdin.read().strip().split('\n') if l]
+if not lines:
+    print('[]')
+else:
+    headers = lines[0].split('\t')
+    rows = []
+    for line in lines[1:]:
+        vals = line.split('\t')
+        rows.append(dict(zip(headers, vals)))
+    print(json.dumps(rows, indent=2, ensure_ascii=False))
+" 2>/dev/null || echo "$raw"
+      else
+        echo "$raw"
+      fi
+      ;;
+    *)
+      echo "$raw"
+      ;;
+  esac
+}
+
+# ── Main ──────────────────────────────────────────────────────────
+
+CONFIG_FILE="${MYSQL_CLI_CONFIG:-$DEFAULT_CNF}"
+FORMAT="table"
+VERTICAL=0
+LIMIT=""
+DRY_RUN=0
+FORCE_INSTANCE="${MYSQL_CLI_INSTANCE:-}"
+FORCE_DB=""
+COMMAND=""
+COMMAND_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -c|--config)   CONFIG_FILE="$2"; shift 2 ;;
+    -f|--format)   FORMAT="$2"; shift 2 ;;
+    --vertical)    VERTICAL=1; shift ;;
+    --limit)       LIMIT="$2"; shift 2 ;;
+    --dry-run)     DRY_RUN=1; shift ;;
+    --instance)    FORCE_INSTANCE="$2"; shift 2 ;;
+    --db)          FORCE_DB="$2"; shift 2 ;;
+    --help)        usage; exit 0 ;;
+    -*)            die "Unknown option: $1" ;;
+    *)
+      if [[ -z "$COMMAND" ]]; then
+        COMMAND="$1"
+      else
+        COMMAND_ARGS+=("$1")
+      fi
+      shift
+      ;;
+  esac
+done
+
+[[ -n "$COMMAND" ]] || { usage; die "Command is required."; }
+
+parse_config "$CONFIG_FILE"
+
+case "$COMMAND" in
+
+  instances)
+    for inst in "${INSTANCE_NAMES[@]}"; do
+      local_host="$(get_inst_var "$inst" host)"
+      local_port="$(get_inst_var "$inst" port)"
+      local_dbs="$(get_inst_var "$inst" databases)"
+      echo "$inst  →  ${local_host}:${local_port:-3306}  ${local_dbs:+(databases: $local_dbs)}"
+    done
+    ;;
+
+  dbs)
+    ensure_metadata
+    for inst in "${INSTANCE_NAMES[@]}"; do
+      [[ -n "$FORCE_INSTANCE" && "$inst" != "$FORCE_INSTANCE" ]] && continue
+      mf="$(metadata_file "$inst")"
+      [[ -f "$mf" ]] || continue
+      echo "=== $inst ==="
+      cut -d'|' -f2 "$mf" | sort -u
+      echo ""
+    done
+    ;;
+
+  tables)
+    ensure_metadata
+    for inst in "${INSTANCE_NAMES[@]}"; do
+      [[ -n "$FORCE_INSTANCE" && "$inst" != "$FORCE_INSTANCE" ]] && continue
+      mf="$(metadata_file "$inst")"
+      [[ -f "$mf" ]] || continue
+      if [[ -n "$FORCE_DB" ]]; then
+        echo "=== $inst / $FORCE_DB ==="
+        grep "^${inst}|${FORCE_DB}|" "$mf" 2>/dev/null | cut -d'|' -f3 | sort
+      else
+        echo "=== $inst ==="
+        awk -F'|' '{printf "  %-30s %s\n", $3, $2}' "$mf" | sort
+      fi
+      echo ""
+    done
+    ;;
+
+  refresh)
+    if [[ -n "$FORCE_INSTANCE" ]]; then
+      refresh_metadata_for_instance "$FORCE_INSTANCE"
+    else
+      refresh_all_metadata
+    fi
+    ;;
+
+  desc)
+    [[ ${#COMMAND_ARGS[@]} -ge 1 ]] || die "Usage: mysql-cli desc <table>"
+    local_table="${COMMAND_ARGS[0]}"
+    ensure_metadata
+    resolved="$(resolve_target "DESC $local_table" "$FORCE_INSTANCE" "$FORCE_DB")"
+    r_inst="$(echo "$resolved" | cut -d'|' -f1)"
+    r_db="$(echo "$resolved" | cut -d'|' -f2)"
+    echo "[$PROG] → $r_inst / $r_db" >&2
+    if [[ $DRY_RUN -eq 1 ]]; then
+      echo "mysql $(build_mysql_args "$r_inst" "$r_db") -e \"DESC \`$local_table\`\""
+      exit 0
+    fi
+    result="$(run_mysql "$r_inst" "$r_db" "DESC \`$local_table\`")"
+    format_output "$result" "$FORMAT" "$VERTICAL"
+    ;;
+
+  exec)
+    [[ ${#COMMAND_ARGS[@]} -ge 1 ]] || die "Usage: mysql-cli exec <sql>"
+    sql="${COMMAND_ARGS[*]}"
+
+    # Append LIMIT if requested and it's a SELECT without one
+    if [[ -n "$LIMIT" ]]; then
+      if echo "$sql" | grep -qi '^[[:space:]]*SELECT' && ! echo "$sql" | grep -qi 'LIMIT'; then
+        sql="$sql LIMIT $LIMIT"
+      fi
+    fi
+
+    ensure_metadata
+    resolved="$(resolve_target "$sql" "$FORCE_INSTANCE" "$FORCE_DB")"
+    r_inst="$(echo "$resolved" | cut -d'|' -f1)"
+    r_db="$(echo "$resolved" | cut -d'|' -f2)"
+    echo "[$PROG] → $r_inst / $r_db" >&2
+
+    suffix=""
+    [[ $VERTICAL -eq 1 ]] && suffix="\\G"
+
+    if [[ $DRY_RUN -eq 1 ]]; then
+      echo "mysql $(build_mysql_args "$r_inst" "$r_db") -e \"${sql}${suffix}\""
+      exit 0
+    fi
+
+    result="$(run_mysql "$r_inst" "$r_db" "${sql}${suffix}")"
+    format_output "$result" "$FORMAT" "$VERTICAL"
+    ;;
+
+  file)
+    [[ ${#COMMAND_ARGS[@]} -ge 1 ]] || die "Usage: mysql-cli file <path.sql>"
+    sql_file="${COMMAND_ARGS[0]}"
+    [[ -f "$sql_file" ]] || die "SQL file not found: $sql_file"
+
+    # Read file content to resolve target
+    sql_content="$(cat "$sql_file")"
+
+    ensure_metadata
+    resolved="$(resolve_target "$sql_content" "$FORCE_INSTANCE" "$FORCE_DB")"
+    r_inst="$(echo "$resolved" | cut -d'|' -f1)"
+    r_db="$(echo "$resolved" | cut -d'|' -f2)"
+    echo "[$PROG] → $r_inst / $r_db (file: $sql_file)" >&2
+
+    if [[ $DRY_RUN -eq 1 ]]; then
+      echo "mysql $(build_mysql_args "$r_inst" "$r_db") < \"$sql_file\""
+      exit 0
+    fi
+
+    result="$(run_mysql_file "$r_inst" "$r_db" "$sql_file")"
+    format_output "$result" "$FORMAT" "$VERTICAL"
+    ;;
+
+  # Backward compat: "query" still works as alias for "exec"
+  query)
+    # Re-invoke as exec
+    exec "$0" -c "$CONFIG_FILE" -f "$FORMAT" \
+      ${FORCE_INSTANCE:+--instance "$FORCE_INSTANCE"} \
+      ${FORCE_DB:+--db "$FORCE_DB"} \
+      ${LIMIT:+--limit "$LIMIT"} \
+      $( [[ $VERTICAL -eq 1 ]] && echo "--vertical" ) \
+      $( [[ $DRY_RUN -eq 1 ]] && echo "--dry-run" ) \
+      exec "${COMMAND_ARGS[@]}"
+    ;;
+
+  *)
+    die "Unknown command: $COMMAND. Run --help for usage."
+    ;;
+esac
