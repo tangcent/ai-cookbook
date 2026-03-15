@@ -1,0 +1,8 @@
+.playwright-cli/
+.DS_Store
+install/.mcp-vars.json
+__pycache__/
+.kiro
+
+# MySQL metadata cache
+skills/mysql-cli/.metadata/
