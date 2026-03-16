@@ -75,6 +75,17 @@ else
   missing+=("gh")
 fi
 
+# --- glab (for GitLab CLI) ---
+if command -v glab &>/dev/null; then
+  echo "✅ glab ($(which glab))"
+  if ! glab auth status &>/dev/null; then
+    echo "   ⚠️  glab is not authenticated. Please run 'glab auth login'."
+  fi
+else
+  echo "❌ glab: not found"
+  missing+=("glab")
+fi
+
 # --- mcp-grafana (for Grafana MCP) ---
 if command -v mcp-grafana &>/dev/null; then
   echo "✅ mcp-grafana ($(which mcp-grafana))"
@@ -123,6 +134,7 @@ echo "These are needed by:"
 echo "  node/npm/npx        → chrome-devtools MCP, maven-indexer MCP, playwright-cli"
 echo "  git                 → git-workflow skill"
 echo "  gh                  → github-cli skill"
+echo "  glab                → gitlab-cli skill"
 echo "  mcp-grafana         → Grafana MCP"
 echo "  openssl@3           → markitdown CLI (macOS SSL cert for HTTPS URLs)"
 echo "  mysql               → mysql-cli skill"
@@ -229,6 +241,21 @@ for tool in "${missing[@]}"; do
           fi
         else
           echo "Homebrew not found. Install from https://cli.github.com/manual/installation"
+        fi
+      fi
+      ;;
+    glab)
+      read -rp "Install GitLab CLI (glab) (via Homebrew)? [y/N] " ans
+      if [[ "$ans" =~ ^[Yy]$ ]]; then
+        if command -v brew &>/dev/null; then
+          brew install glab
+          echo ""
+          if ! glab auth status &>/dev/null; then
+            echo "⚠️  GitLab CLI is not authenticated."
+            echo "   Please run 'glab auth login' to authenticate."
+          fi
+        else
+          echo "Homebrew not found. Install from https://gitlab.com/gitlab-org/cli#installation"
         fi
       fi
       ;;
