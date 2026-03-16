@@ -60,6 +60,20 @@ Interact with GitHub via the `gh` CLI — manage repositories, issues, pull requ
 <!-- AI: Run install/INSTALL.md to install the github-cli skill -->
 
 
+### gitlab-cli
+
+Interact with GitLab via the `glab` CLI — manage repositories, issues, merge requests, pipelines, releases, code search, and API calls.
+
+- Create, review, and merge merge requests
+- Create and manage issues with labels, assignees, and comments
+- View and manage CI/CD pipelines and jobs
+- Manage releases, tags, and raw GitLab API calls
+- Structured output with `--output json` and `--jq` for programmatic use
+
+> 💬 Tell your AI: "install gitlab-cli"
+<!-- AI: Run install/INSTALL.md to install the gitlab-cli skill -->
+
+
 ### mysql-cli
 
 Query, modify, and inspect MySQL databases via `mysql-cli`, a smart wrapper with multi-instance support and automatic database routing.
@@ -130,6 +144,7 @@ Convert various file formats (PDF, DOCX, XLSX, PPTX, HTML, images, etc.) to Mark
 |-----|-------------|------|---------------|
 | [Playwright CLI](https://github.com/microsoft/playwright-cli) | Token-efficient browser automation CLI for coding agents | [playwright-cli.md](cli/playwright-cli.md) | 💬 "install playwright-cli" |
 | [GitHub CLI](https://github.com/cli/cli) | Repository management, issues, PRs, releases, and GitHub API from the terminal | [gh.md](cli/gh.md) | 💬 "install gh" |
+| [GitLab CLI](https://gitlab.com/gitlab-org/cli) | Repository management, issues, MRs, pipelines, releases, and GitLab API from the terminal | [glab.md](cli/glab.md) | 💬 "install glab" |
 | [MarkItDown](https://github.com/microsoft/markitdown) | Convert PDF, Word, Excel, PowerPoint, HTML, images to Markdown | [markitdown.md](cli/markitdown.md) | 💬 "install markitdown" |
 
 <!-- AI: For any "install <cli-name>" command, run install/INSTALL.md to install the specified CLI -->

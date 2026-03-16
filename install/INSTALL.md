@@ -62,9 +62,9 @@ Ask yourself (or let the agent ask you):
 | Option | Description |
 |--------|-------------|
 | `all` | Install all CLIs + MCPs + Skills |
-| `all cli` | Install all CLIs (playwright-cli, markitdown) |
+| `all cli` | Install all CLIs (playwright-cli, gh, glab, markitdown) |
 | `all mcp` | Install all MCPs (chrome-devtools, grafana, maven-indexer) |
-| `all skills` | Install all Skills (audit-sql, git-workflow, github-cli, mysql-cli, playwright-cli, markitdown, spec-driven) |
+| `all skills` | Install all Skills (audit-sql, git-workflow, github-cli, gitlab-cli, mysql-cli, playwright-cli, markitdown, spec-driven) |
 | `<specific>` | Install a specific item by name (e.g. `grafana`, `git-workflow`, `playwright-cli`) |
 
 ## Step 3: Choose Target AI Tool(s)
@@ -136,6 +136,7 @@ done
 |-----|----------------|
 | playwright-cli | `npm install -g @playwright/cli@latest` |
 | gh | `brew install gh` |
+| glab | `brew install glab` |
 | markitdown | `pip install markitdown` or `uvx markitdown` |
 
 ### Install All (bulk)
@@ -211,6 +212,7 @@ After installation, some MCPs may still have placeholder values that need to be 
 |------|-------------|
 | playwright-cli | Token-efficient browser automation CLI for coding agents |
 | gh | Repository management, issues, PRs, releases, and GitHub API from the terminal |
+| glab | Repository management, issues, MRs, pipelines, releases, and GitLab API from the terminal |
 | markitdown | Convert PDF, Word, Excel, PowerPoint, HTML, images to Markdown |
 
 ### MCPs
@@ -226,6 +228,7 @@ After installation, some MCPs may still have placeholder values that need to be 
 | audit-sql | SQL audit on MyBatis mapper XML files |
 | git-workflow | Branch prefixes, conventional commits, sync operations |
 | github-cli | Interact with GitHub via the `gh` CLI |
+| gitlab-cli | Interact with GitLab via the `glab` CLI |
 | mysql-cli | Query, modify, and inspect MySQL with multi-instance auto-routing |
 | playwright-cli | Browser automation for web testing, form filling, screenshots, and data extraction |
 | markitdown | Convert various file formats to Markdown via CLI |
