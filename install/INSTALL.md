@@ -80,10 +80,69 @@ Ask yourself (or let the agent ask you):
 
 MCP definitions are maintained in a single file: `install/mcp-servers.json`. Each tool has a merge script that transforms and merges them into the tool's config format.
 
-### Install MCPs (all tools at once)
+### Install a Single MCP
+
+Pass the MCP name as an argument to the merge script for each target tool:
 
 ```bash
-# From the ai-cookbook root:
+# Example: install only grafana into Kiro
+python3 install/kiro/merge-mcp.py grafana
+```
+
+To install into all detected tools at once:
+
+```bash
+python3 install/kiro/merge-mcp.py <mcp-name>
+python3 install/claude/merge-mcp.py <mcp-name>
+python3 install/cline/merge-mcp.py <mcp-name>
+python3 install/opencode/merge-mcp.py <mcp-name>
+python3 install/antigravity/merge-mcp.py <mcp-name>
+python3 install/trae/merge-mcp.py <mcp-name>
+python3 install/trae-cn/merge-mcp.py <mcp-name>
+```
+
+### Install a Single Skill
+
+Copy the skill folder into the target tool's skill directory:
+
+| AI Tool | Skill Directory |
+|---------|----------------|
+| Kiro | `~/.kiro/skills/` |
+| Claude Code | `~/.claude/skills/` |
+| Cline | `~/.cline/skills/` |
+| OpenCode | `~/.config/opencode/skills/` |
+| Antigravity | `~/.gemini/antigravity/skills/` |
+| Trae | `~/.trae/skills/` |
+| Trae CN | `~/.trae-cn/skills/` |
+
+```bash
+# Example: install only audit-sql into Kiro
+mkdir -p ~/.kiro/skills
+cp -r skills/audit-sql ~/.kiro/skills/
+```
+
+To install a skill into all detected tools at once:
+
+```bash
+SKILL=<skill-name>
+for dir in ~/.kiro/skills ~/.claude/skills ~/.cline/skills ~/.config/opencode/skills ~/.gemini/antigravity/skills ~/.trae/skills ~/.trae-cn/skills; do
+  [ -d "$(dirname "$dir")" ] && mkdir -p "$dir" && rm -rf "$dir/$SKILL" && cp -r "skills/$SKILL" "$dir/$SKILL"
+done
+```
+
+### Install a Single CLI
+
+| CLI | Install Command |
+|-----|----------------|
+| playwright-cli | `npm install -g @playwright/cli@latest` |
+| gh | `brew install gh` |
+| markitdown | `pip install markitdown` or `uvx markitdown` |
+
+### Install All (bulk)
+
+To install all MCPs into all tools:
+
+```bash
 python3 install/kiro/merge-mcp.py
 python3 install/claude/merge-mcp.py
 python3 install/cline/merge-mcp.py
@@ -93,11 +152,7 @@ python3 install/trae/merge-mcp.py
 python3 install/trae-cn/merge-mcp.py
 ```
 
-Or install specific MCPs:
-
-```bash
-python3 install/kiro/merge-mcp.py github grafana
-```
+To install all skills into all tools, see each tool's README for the bulk copy loop.
 
 ### Tool-specific details
 
@@ -113,7 +168,7 @@ Each tool has its own README with full instructions for installing CLIs, MCPs, a
 | Trae | `python3 install/trae/merge-mcp.py` | [install/trae/README.md](trae/README.md) |
 | Trae CN | `python3 install/trae-cn/merge-mcp.py` | [install/trae-cn/README.md](trae-cn/README.md) |
 
-> **For AI agents:** When installing skills or CLIs for a specific tool, read that tool's README (e.g. `install/kiro/README.md`) for the correct target directories and commands.
+> **For AI agents:** When installing a single item, use the patterns above. For tool-specific details (skill directory paths, config formats), read that tool's README (e.g. `install/kiro/README.md`).
 
 ## Step 5: Fill Remaining Variables
 

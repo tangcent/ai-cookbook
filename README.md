@@ -30,6 +30,9 @@ Perform a production-readiness SQL audit on MyBatis mapper XML files. Acts as a 
 - Audit each SQL statement against index usage, full table scan risks, locking hazards, and N+1 patterns
 - Produce a structured report grouped by mapper file with severity ratings (CRITICAL / HIGH / MEDIUM / LOW)
 
+> 💬 Tell your AI: "install audit-sql"
+<!-- AI: Run install/INSTALL.md to install the audit-sql skill -->
+
 
 ### git-workflow
 
@@ -38,6 +41,9 @@ Git workflow management with branch prefixes, conventional commits, and advanced
 - Create branches with `feature/`, `release/`, `fix/` prefixes
 - Conventional commit messages (`feat:`, `fix:`, `amend:`, `chore:`, `release:`)
 - Sync feature branches onto latest master, consolidate branches, and generate merge request URLs
+
+> 💬 Tell your AI: "install git-workflow"
+<!-- AI: Run install/INSTALL.md to install the git-workflow skill -->
 
 
 ### github-cli
@@ -49,6 +55,9 @@ Interact with GitHub via the `gh` CLI — manage repositories, issues, pull requ
 - Search code, issues, PRs, and repositories
 - Manage releases, GitHub Actions workflows, and raw API calls
 - Structured output with `--json` and `--jq` for programmatic use
+
+> 💬 Tell your AI: "install github-cli"
+<!-- AI: Run install/INSTALL.md to install the github-cli skill -->
 
 
 ### mysql-cli
@@ -62,6 +71,9 @@ Query, modify, and inspect MySQL databases via `mysql-cli`, a smart wrapper with
 - Execute `.sql` files with automatic target resolution
 - Output as table, CSV, JSON, or vertical format
 
+> 💬 Tell your AI: "install mysql-cli"
+<!-- AI: Run install/INSTALL.md to install the mysql-cli skill -->
+
 
 ### playwright-cli
 
@@ -71,6 +83,9 @@ Automates browser interactions for web testing, form filling, screenshots, and d
 - Session management for isolating browser profiles across projects
 - Request mocking, tracing, video recording, and storage state management
 - Test code generation from interactive browser sessions
+
+> 💬 Tell your AI: "install playwright-cli"
+<!-- AI: Run install/INSTALL.md to install the playwright-cli skill and CLI -->
 
 
 ### spec-driven
@@ -82,6 +97,9 @@ Spec-driven development workflow for requirements gathering, design, task breakd
 - Artifacts saved to `.spec/<spec-name>/` with automatic scaling for large features
 - Resume support — detects existing specs and continues from the last incomplete task
 
+> 💬 Tell your AI: "install spec-driven"
+<!-- AI: Run install/INSTALL.md to install the spec-driven skill -->
+
 
 ### markitdown
 
@@ -92,19 +110,26 @@ Convert various file formats (PDF, DOCX, XLSX, PPTX, HTML, images, etc.) to Mark
 - Pipe support for integration with other tools
 - Batch processing capabilities
 
+> 💬 Tell your AI: "install markitdown"
+<!-- AI: Run install/INSTALL.md to install the markitdown skill and CLI -->
+
 
 ## MCPs
 
-| MCP | Description | Docs |
-|-----|-------------|------|
-| [Maven Indexer](https://github.com/tangcent/maven-indexer-mcp) | Search classes, artifacts, and resources in local Maven/Gradle caches | [maven-indexer.md](mcp/maven-indexer.md) |
-| [Grafana](https://github.com/grafana/mcp-grafana) | Dashboard management, Prometheus/Loki querying, alerts, and incidents | [grafana.md](mcp/grafana.md) |
-| [Chrome DevTools](https://github.com/ChromeDevTools/chrome-devtools-mcp) | Browser automation, DOM interaction, network inspection, and performance tracing | [chrome-devtools.md](mcp/chrome-devtools.md) |
+| MCP | Description | Docs | Quick Install |
+|-----|-------------|------|---------------|
+| [Maven Indexer](https://github.com/tangcent/maven-indexer-mcp) | Search classes, artifacts, and resources in local Maven/Gradle caches | [maven-indexer.md](mcp/maven-indexer.md) | 💬 "install maven-indexer" |
+| [Grafana](https://github.com/grafana/mcp-grafana) | Dashboard management, Prometheus/Loki querying, alerts, and incidents | [grafana.md](mcp/grafana.md) | 💬 "install grafana" |
+| [Chrome DevTools](https://github.com/ChromeDevTools/chrome-devtools-mcp) | Browser automation, DOM interaction, network inspection, and performance tracing | [chrome-devtools.md](mcp/chrome-devtools.md) | 💬 "install chrome-devtools" |
+
+<!-- AI: For any "install <mcp-name>" command, run install/INSTALL.md to install the specified MCP -->
 
 ## CLIs
 
-| CLI | Description | Docs |
-|-----|-------------|------|
-| [Playwright CLI](https://github.com/microsoft/playwright-cli) | Token-efficient browser automation CLI for coding agents | [playwright-cli.md](cli/playwright-cli.md) |
-| [GitHub CLI](https://github.com/cli/cli) | Repository management, issues, PRs, releases, and GitHub API from the terminal | [gh.md](cli/gh.md) |
-| [MarkItDown](https://github.com/microsoft/markitdown) | Convert PDF, Word, Excel, PowerPoint, HTML, images to Markdown | [markitdown.md](cli/markitdown.md) |
+| CLI | Description | Docs | Quick Install |
+|-----|-------------|------|---------------|
+| [Playwright CLI](https://github.com/microsoft/playwright-cli) | Token-efficient browser automation CLI for coding agents | [playwright-cli.md](cli/playwright-cli.md) | 💬 "install playwright-cli" |
+| [GitHub CLI](https://github.com/cli/cli) | Repository management, issues, PRs, releases, and GitHub API from the terminal | [gh.md](cli/gh.md) | 💬 "install gh" |
+| [MarkItDown](https://github.com/microsoft/markitdown) | Convert PDF, Word, Excel, PowerPoint, HTML, images to Markdown | [markitdown.md](cli/markitdown.md) | 💬 "install markitdown" |
+
+<!-- AI: For any "install <cli-name>" command, run install/INSTALL.md to install the specified CLI -->
