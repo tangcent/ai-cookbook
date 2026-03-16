@@ -73,6 +73,16 @@ Automates browser interactions for web testing, form filling, screenshots, and d
 - Test code generation from interactive browser sessions
 
 
+### spec-driven
+
+Spec-driven development workflow for requirements gathering, design, task breakdown, and execution.
+
+- Two flows: Spec (Requirements → Design → Tasks → Execute) and Plan (Plan → Execute)
+- EARS-style requirement language with checkbox-based task tracking
+- Artifacts saved to `.spec/<spec-name>/` with automatic scaling for large features
+- Resume support — detects existing specs and continues from the last incomplete task
+
+
 ### markitdown
 
 Convert various file formats (PDF, DOCX, XLSX, PPTX, HTML, images, etc.) to Markdown via CLI.
