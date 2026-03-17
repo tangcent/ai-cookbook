@@ -34,6 +34,19 @@ Perform a production-readiness SQL audit on MyBatis mapper XML files. Acts as a 
 <!-- AI: Run install/INSTALL.md to install the audit-sql skill -->
 
 
+### grafana-dashboard
+
+Build and modify Grafana dashboards following established style conventions — stat panel thresholds, timeseries styling, PromQL patterns, and layout structure.
+
+- Requires the Grafana MCP; prompts the user to enable it if unavailable
+- Enforces consistent panel styling: `background_solid` stat cards, `smooth` line interpolation, `opacity` gradient fills, standard threshold colors
+- Codifies PromQL conventions: `clamp_min` for safe division, `$__range` for stat totals, `histogram_quantile * 1000` for latency
+- Provides dashboard templates for HTTP Performance, Business Metrics, Outbound API, Pipeline/Queue, and Validation/Quality dashboards
+
+> 💬 Tell your AI: "install grafana-dashboard"
+<!-- AI: Run install/INSTALL.md to install the grafana-dashboard skill -->
+
+
 ### git-workflow
 
 Git workflow management with branch prefixes, conventional commits, and advanced synchronization operations.
