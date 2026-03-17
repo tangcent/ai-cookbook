@@ -18,6 +18,12 @@ CONFIG_FILES=()
 
 # --- Gather all possible MCP config file paths ---
 
+# Cursor
+for f in \
+  "$HOME/.cursor/mcp.json"; do
+  [ -f "$f" ] && CONFIG_FILES+=("$f")
+done
+
 # Kiro
 for f in \
   "$HOME/.kiro/settings/mcp.json"; do
