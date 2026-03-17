@@ -64,7 +64,7 @@ Ask yourself (or let the agent ask you):
 | `all` | Install all CLIs + MCPs + Skills |
 | `all cli` | Install all CLIs (playwright-cli, gh, glab, markitdown) |
 | `all mcp` | Install all MCPs (chrome-devtools, grafana, maven-indexer) |
-| `all skills` | Install all Skills (audit-sql, git-workflow, github-cli, gitlab-cli, mysql-cli, playwright-cli, markitdown, spec-driven) |
+| `all skills` | Install all Skills (audit-sql, grafana-dashboard, git-workflow, github-cli, gitlab-cli, mysql-cli, playwright-cli, markitdown, spec-driven) |
 | `<specific>` | Install a specific item by name (e.g. `grafana`, `git-workflow`, `playwright-cli`) |
 
 ## Step 3: Choose Target AI Tool(s)
@@ -226,6 +226,7 @@ After installation, some MCPs may still have placeholder values that need to be 
 | Name | Description |
 |------|-------------|
 | audit-sql | SQL audit on MyBatis mapper XML files |
+| grafana-dashboard | Build Grafana dashboards with consistent style conventions |
 | git-workflow | Branch prefixes, conventional commits, sync operations |
 | github-cli | Interact with GitHub via the `gh` CLI |
 | gitlab-cli | Interact with GitLab via the `glab` CLI |
