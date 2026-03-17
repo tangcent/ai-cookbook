@@ -25,6 +25,7 @@ bash install/detect-ai-tools.sh
 Supported tools:
 | Tool | Type | Global Config |
 |------|------|---------------|
+| Cursor | IDE | `~/.cursor/mcp.json` (key: `mcpServers`) |
 | Kiro | IDE | `~/.kiro/settings/mcp.json` |
 | Claude Code | CLI | `~/.claude.json` (key: `mcpServers`) |
 | Cline | VS Code Extension | `~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json` |
@@ -92,6 +93,7 @@ python3 install/kiro/merge-mcp.py grafana
 To install into all detected tools at once:
 
 ```bash
+python3 install/cursor/merge-mcp.py <mcp-name>
 python3 install/kiro/merge-mcp.py <mcp-name>
 python3 install/claude/merge-mcp.py <mcp-name>
 python3 install/cline/merge-mcp.py <mcp-name>
@@ -107,6 +109,7 @@ Copy the skill folder into the target tool's skill directory:
 
 | AI Tool | Skill Directory |
 |---------|----------------|
+| Cursor | `~/.cursor/skills/` |
 | Kiro | `~/.kiro/skills/` |
 | Claude Code | `~/.claude/skills/` |
 | Cline | `~/.cline/skills/` |
@@ -125,7 +128,7 @@ To install a skill into all detected tools at once:
 
 ```bash
 SKILL=<skill-name>
-for dir in ~/.kiro/skills ~/.claude/skills ~/.cline/skills ~/.config/opencode/skills ~/.gemini/antigravity/skills ~/.trae/skills ~/.trae-cn/skills; do
+for dir in ~/.cursor/skills ~/.kiro/skills ~/.claude/skills ~/.cline/skills ~/.config/opencode/skills ~/.gemini/antigravity/skills ~/.trae/skills ~/.trae-cn/skills; do
   [ -d "$(dirname "$dir")" ] && mkdir -p "$dir" && rm -rf "$dir/$SKILL" && cp -r "skills/$SKILL" "$dir/$SKILL"
 done
 ```
@@ -144,6 +147,7 @@ done
 To install all MCPs into all tools:
 
 ```bash
+python3 install/cursor/merge-mcp.py
 python3 install/kiro/merge-mcp.py
 python3 install/claude/merge-mcp.py
 python3 install/cline/merge-mcp.py
@@ -161,6 +165,7 @@ Each tool has its own README with full instructions for installing CLIs, MCPs, a
 
 | AI Tool | Merge Script | Full Instructions |
 |---------|-------------|-------------------|
+| Cursor | `python3 install/cursor/merge-mcp.py` | [install/cursor/README.md](cursor/README.md) |
 | Kiro | `python3 install/kiro/merge-mcp.py` | [install/kiro/README.md](kiro/README.md) |
 | Claude Code | `python3 install/claude/merge-mcp.py` | [install/claude/README.md](claude/README.md) |
 | Cline | `python3 install/cline/merge-mcp.py` | [install/cline/README.md](cline/README.md) |
@@ -183,6 +188,7 @@ After installation, some MCPs may still have placeholder values that need to be 
 
 | AI Tool | Config File |
 |---------|------------|
+| Cursor | `~/.cursor/mcp.json` |
 | Kiro | `~/.kiro/settings/mcp.json` |
 | Claude Code | `~/.claude.json` |
 | Cline | `~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json` |

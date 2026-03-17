@@ -7,6 +7,14 @@ set -euo pipefail
 
 found=0
 
+# --- Cursor ---
+if command -v cursor &>/dev/null || [ -d "$HOME/.cursor" ]; then
+  echo "cursor: available"
+  found=1
+else
+  echo "cursor: not found"
+fi
+
 # --- Kiro ---
 if [ -d "$HOME/.kiro" ] || command -v kiro &>/dev/null; then
   echo "kiro: available"
