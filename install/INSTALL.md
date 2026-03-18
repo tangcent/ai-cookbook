@@ -105,32 +105,17 @@ python3 install/trae-cn/merge-mcp.py <mcp-name>
 
 ### Install a Single Skill
 
-Copy the skill folder into the target tool's skill directory:
-
-| AI Tool | Skill Directory |
-|---------|----------------|
-| Cursor | `~/.cursor/skills/` |
-| Kiro | `~/.kiro/skills/` |
-| Claude Code | `~/.claude/skills/` |
-| Cline | `~/.cline/skills/` |
-| OpenCode | `~/.config/opencode/skills/` |
-| Antigravity | `~/.gemini/antigravity/skills/` |
-| Trae | `~/.trae/skills/` |
-| Trae CN | `~/.trae-cn/skills/` |
+Use the install script to copy skills and resolve script paths:
 
 ```bash
 # Example: install only audit-sql into Kiro
-mkdir -p ~/.kiro/skills
-cp -r skills/audit-sql ~/.kiro/skills/
+bash install/install-skills.sh kiro audit-sql
 ```
 
 To install a skill into all detected tools at once:
 
 ```bash
-SKILL=<skill-name>
-for dir in ~/.cursor/skills ~/.kiro/skills ~/.claude/skills ~/.cline/skills ~/.config/opencode/skills ~/.gemini/antigravity/skills ~/.trae/skills ~/.trae-cn/skills; do
-  [ -d "$(dirname "$dir")" ] && mkdir -p "$dir" && rm -rf "$dir/$SKILL" && cp -r "skills/$SKILL" "$dir/$SKILL"
-done
+bash install/install-skills.sh all <skill-name>
 ```
 
 ### Install a Single CLI
@@ -157,7 +142,11 @@ python3 install/trae/merge-mcp.py
 python3 install/trae-cn/merge-mcp.py
 ```
 
-To install all skills into all tools, see each tool's README for the bulk copy loop.
+To install all skills into all tools:
+
+```bash
+bash install/install-skills.sh all
+```
 
 ### Tool-specific details
 

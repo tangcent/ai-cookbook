@@ -44,15 +44,15 @@ The script reads from `install/mcp-servers.json`, converts to OpenCode format (`
 
 ## Install Skills
 
-Copy skill folders into `~/.config/opencode/skills/`:
+Install skill folders into `~/.config/opencode/skills/` (with script path resolution):
 
 ```bash
 # From the ai-cookbook root:
-mkdir -p ~/.config/opencode/skills
-for skill in skills/*/SKILL.md; do
-  dir="$(dirname "$skill")"
-  name="$(basename "$dir")"
-  rm -rf ~/.config/opencode/skills/"$name"
-  cp -r "$dir" ~/.config/opencode/skills/"$name"
-done
+bash install/install-skills.sh opencode
+```
+
+Or install individually:
+
+```bash
+bash install/install-skills.sh opencode audit-sql
 ```

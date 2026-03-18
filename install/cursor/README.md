@@ -44,22 +44,16 @@ The script reads from `install/mcp-servers.json`, auto-fills variables from `ins
 
 ## Install Skills
 
-Copy skill folders into `~/.cursor/skills/`:
+Install skill folders into `~/.cursor/skills/` (with script path resolution):
 
 ```bash
 # From the ai-cookbook root:
-mkdir -p ~/.cursor/skills
-for skill in skills/*/SKILL.md; do
-  dir="$(dirname "$skill")"
-  name="$(basename "$dir")"
-  rm -rf ~/.cursor/skills/"$name"
-  cp -r "$dir" ~/.cursor/skills/"$name"
-done
+bash install/install-skills.sh cursor
 ```
 
 Or install individually:
 
 ```bash
-cp -r skills/audit-sql ~/.cursor/skills/
-cp -r skills/git-workflow ~/.cursor/skills/
+bash install/install-skills.sh cursor audit-sql
+bash install/install-skills.sh cursor git-workflow
 ```
