@@ -44,22 +44,16 @@ The script reads from `install/mcp-servers.json`, adds Kiro-specific fields (`au
 
 ## Install Skills
 
-Copy skill folders into `~/.kiro/skills/`:
+Install skill folders into `~/.kiro/skills/` (with script path resolution):
 
 ```bash
 # From the ai-cookbook root:
-mkdir -p ~/.kiro/skills
-for skill in skills/*/SKILL.md; do
-  dir="$(dirname "$skill")"
-  name="$(basename "$dir")"
-  rm -rf ~/.kiro/skills/"$name"
-  cp -r "$dir" ~/.kiro/skills/"$name"
-done
+bash install/install-skills.sh kiro
 ```
 
 Or install individually:
 
 ```bash
-cp -r skills/audit-sql ~/.kiro/skills/
-cp -r skills/git-workflow ~/.kiro/skills/
+bash install/install-skills.sh kiro audit-sql
+bash install/install-skills.sh kiro git-workflow
 ```

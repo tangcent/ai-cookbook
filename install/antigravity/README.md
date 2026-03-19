@@ -44,22 +44,16 @@ The script reads from `install/mcp-servers.json`, auto-fills variables from `ins
 
 ## Install Skills
 
-Copy skill folders into `~/.gemini/antigravity/skills/`:
+Install skill folders into `~/.gemini/antigravity/skills/` (with script path resolution):
 
 ```bash
 # From the ai-cookbook root:
-mkdir -p ~/.gemini/antigravity/skills
-for skill in skills/*/SKILL.md; do
-  dir="$(dirname "$skill")"
-  name="$(basename "$dir")"
-  rm -rf ~/.gemini/antigravity/skills/"$name"
-  cp -r "$dir" ~/.gemini/antigravity/skills/"$name"
-done
+bash install/install-skills.sh antigravity
 ```
 
 Or install individually:
 
 ```bash
-cp -r skills/audit-sql ~/.gemini/antigravity/skills/
-cp -r skills/git-workflow ~/.gemini/antigravity/skills/
+bash install/install-skills.sh antigravity audit-sql
+bash install/install-skills.sh antigravity git-workflow
 ```
