@@ -141,6 +141,19 @@ Convert various file formats (PDF, DOCX, XLSX, PPTX, HTML, images, etc.) to Mark
 <!-- AI: Run install/INSTALL.md to install the markitdown skill and CLI -->
 
 
+### obsidian
+
+Work with Obsidian vaults — create and edit Obsidian Flavored Markdown, Bases, JSON Canvas, and interact with vaults via the Obsidian CLI.
+
+- Obsidian Flavored Markdown: wikilinks, embeds, callouts, properties, tags, comments, highlights
+- Bases (`.base` files): database-like views with filters, formulas, and multiple view types (table, cards, list, map)
+- JSON Canvas (`.canvas` files): visual canvases with text/file/link/group nodes, edges, and layout guidelines
+- Obsidian CLI: read, create, search, and manage notes, tasks, properties; plugin and theme development
+
+> 💬 Tell your AI: "install obsidian"
+<!-- AI: Run install/INSTALL.md to install the obsidian skill -->
+
+
 ## MCPs
 
 | MCP | Description | Docs | Quick Install |
