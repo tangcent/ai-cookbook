@@ -45,9 +45,7 @@ def main():
         existing["mcpServers"] = {}
 
     existing_servers = existing["mcpServers"]
-    existing["mcpServers"] = lib.deep_merge(existing_servers, claude_servers)
-    # Preserve user-controlled fields (e.g. disabled) set via the Claude UI
-    lib.preserve_user_fields(existing["mcpServers"], existing_servers)
+    existing["mcpServers"] = lib.merge_servers(existing_servers, claude_servers)
 
     CONFIG_PATH.write_text(json.dumps(existing, indent=2) + "\n")
 

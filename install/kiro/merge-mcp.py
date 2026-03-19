@@ -73,9 +73,7 @@ def main():
 
     # Merge: new servers override existing ones by name
     existing_servers = existing["mcpServers"]
-    existing["mcpServers"] = lib.deep_merge(existing_servers, kiro_servers)
-    # Preserve user-controlled fields (e.g. disabled) set via the Kiro UI
-    lib.preserve_user_fields(existing["mcpServers"], existing_servers)
+    existing["mcpServers"] = lib.merge_servers(existing_servers, kiro_servers)
 
     # Write back
     CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
