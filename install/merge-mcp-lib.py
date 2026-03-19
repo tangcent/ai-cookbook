@@ -84,3 +84,25 @@ def deep_merge(base, override):
         else:
             result[k] = v
     return result
+
+
+def merge_servers(existing_servers, new_servers, install_owned_keys=None):
+    """Merge new server definitions into existing ones, preserving user settings.
+
+    For new servers (not in existing config): use the full definition as-is.
+    For existing servers: only update install-owned keys (command, args, env by default)
+    and preserve everything else the user may have configured.
+    """
+    if install_owned_keys is None:
+        install_owned_keys = {"command", "args", "env"}
+    result = dict(existing_servers)
+    for name, new_cfg in new_servers.items():
+        if name not in result:
+            # New server — use full definition including defaults
+            result[name] = new_cfg
+        else:
+            # Existing server — only update install-owned keys
+            for key in install_owned_keys:
+                if key in new_cfg:
+                    result[name][key] = new_cfg[key]
+    return result

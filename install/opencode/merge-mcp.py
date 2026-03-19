@@ -54,7 +54,8 @@ def main():
     if "mcp" not in existing:
         existing["mcp"] = {}
 
-    existing["mcp"] = lib.deep_merge(existing["mcp"], oc_servers)
+    existing["mcp"] = lib.merge_servers(existing["mcp"], oc_servers,
+                                       install_owned_keys={"command", "environment", "type"})
 
     CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
     CONFIG_PATH.write_text(json.dumps(existing, indent=2) + "\n")

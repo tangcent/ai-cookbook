@@ -40,7 +40,7 @@ def main():
     if "mcpServers" not in existing:
         existing["mcpServers"] = {}
 
-    existing["mcpServers"] = lib.deep_merge(existing["mcpServers"], cursor_servers)
+    existing["mcpServers"] = lib.merge_servers(existing["mcpServers"], cursor_servers)
 
     CONFIG_PATH.write_text(json.dumps(existing, indent=2) + "\n")
 

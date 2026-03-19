@@ -36,7 +36,7 @@ Or merge specific servers:
 python3 install/trae-cn/merge-mcp.py github grafana
 ```
 
-The script reads from `install/mcp-servers.json`, auto-fills variables from `install/.mcp-vars.json`, and merges into the existing `~/Library/Application Support/Trae CN/User/mcp.json` (preserving other keys).
+The script reads from `install/mcp-servers.json`, auto-fills variables from `install/.mcp-vars.json`, and merges into the existing `~/Library/Application Support/Trae CN/User/mcp.json` (preserving other keys). Re-running the script is safe — existing settings are never overwritten.
 
 > For `github` and `grafana`, install the binaries first: `brew install github-mcp-server mcp-grafana`
 

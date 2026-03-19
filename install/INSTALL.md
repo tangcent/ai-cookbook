@@ -81,6 +81,10 @@ Ask yourself (or let the agent ask you):
 
 MCP definitions are maintained in a single file: `install/mcp-servers.json`. Each tool has a merge script that transforms and merges them into the tool's config format.
 
+> **Re-installing is safe.** The merge scripts update `command`, `args`, and `env` from the source file, but preserve user-controlled settings (e.g. `disabled` status set via the tool's UI). Disabling an MCP in your AI tool and then re-running the install script will not re-enable it.
+
+> **MCPs are installed disabled by default.** After installation, enable only the MCPs you need for a given project via your AI tool's UI. This keeps your workspace clean and avoids loading tools you don't need.
+
 ### Install a Single MCP
 
 Pass the MCP name as an argument to the merge script for each target tool:

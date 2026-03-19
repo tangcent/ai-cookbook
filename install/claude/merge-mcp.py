@@ -19,8 +19,13 @@ CONFIG_PATH = Path.home() / ".claude.json"
 
 
 def transform(servers):
-    """Claude uses standard format, no extra fields needed."""
-    return dict(servers)
+    """Claude uses standard format. Install disabled by default — enable per-project as needed."""
+    result = {}
+    for name, cfg in servers.items():
+        entry = dict(cfg)
+        entry["disabled"] = True
+        result[name] = entry
+    return result
 
 
 def main():
@@ -39,7 +44,8 @@ def main():
     if "mcpServers" not in existing:
         existing["mcpServers"] = {}
 
-    existing["mcpServers"] = lib.deep_merge(existing["mcpServers"], claude_servers)
+    existing_servers = existing["mcpServers"]
+    existing["mcpServers"] = lib.merge_servers(existing_servers, claude_servers)
 
     CONFIG_PATH.write_text(json.dumps(existing, indent=2) + "\n")
 
