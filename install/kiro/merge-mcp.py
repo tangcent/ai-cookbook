@@ -50,7 +50,7 @@ def transform(servers):
         entry = dict(cfg)
         if name in AUTO_APPROVE:
             entry["autoApprove"] = AUTO_APPROVE[name]
-        entry["disabled"] = False
+        entry["disabled"] = True
         result[name] = entry
     return result
 
@@ -72,7 +72,8 @@ def main():
         existing["mcpServers"] = {}
 
     # Merge: new servers override existing ones by name
-    existing["mcpServers"] = lib.deep_merge(existing["mcpServers"], kiro_servers)
+    existing_servers = existing["mcpServers"]
+    existing["mcpServers"] = lib.merge_servers(existing_servers, kiro_servers)
 
     # Write back
     CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)

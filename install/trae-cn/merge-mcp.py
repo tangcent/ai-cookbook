@@ -39,7 +39,7 @@ def main():
     if "mcpServers" not in existing:
         existing["mcpServers"] = {}
 
-    existing["mcpServers"] = lib.deep_merge(existing["mcpServers"], trae_cn_servers)
+    existing["mcpServers"] = lib.merge_servers(existing["mcpServers"], trae_cn_servers)
 
     try:
         CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)

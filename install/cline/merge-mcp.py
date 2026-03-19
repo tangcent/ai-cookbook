@@ -28,7 +28,7 @@ def transform(servers):
     result = {}
     for name, cfg in servers.items():
         entry = dict(cfg)
-        entry["disabled"] = False
+        entry["disabled"] = True
         result[name] = entry
     return result
 
@@ -48,7 +48,8 @@ def main():
     if "mcpServers" not in existing:
         existing["mcpServers"] = {}
 
-    existing["mcpServers"] = lib.deep_merge(existing["mcpServers"], cline_servers)
+    existing_servers = existing["mcpServers"]
+    existing["mcpServers"] = lib.merge_servers(existing_servers, cline_servers)
 
     CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
     CONFIG_PATH.write_text(json.dumps(existing, indent=2) + "\n")
