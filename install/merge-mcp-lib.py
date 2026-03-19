@@ -84,3 +84,17 @@ def deep_merge(base, override):
         else:
             result[k] = v
     return result
+
+
+def preserve_user_fields(merged_servers, existing_servers, fields=("disabled",)):
+    """Restore user-controlled fields from existing config after a merge.
+
+    Prevents reinstallation from overriding user preferences (e.g. disabled status).
+    Only restores fields that were explicitly set in the existing config.
+    """
+    for name, cfg in merged_servers.items():
+        if name in existing_servers:
+            for field in fields:
+                if field in existing_servers[name]:
+                    cfg[field] = existing_servers[name][field]
+    return merged_servers

@@ -36,7 +36,7 @@ Or merge specific servers:
 python3 install/cline/merge-mcp.py github grafana
 ```
 
-The script reads from `install/mcp-servers.json`, adds Cline-specific fields (`disabled`), auto-fills variables from `install/.mcp-vars.json`, and merges into the existing config.
+The script reads from `install/mcp-servers.json`, adds Cline-specific fields (`disabled`), auto-fills variables from `install/.mcp-vars.json`, and merges into the existing config. MCPs are installed with `disabled: true` by default — enable them via the Cline UI when you need them for a project. Re-running the script is safe; user-controlled settings like `disabled` are never overwritten.
 
 > For `github` and `grafana`, install the binaries first: `brew install github-mcp-server mcp-grafana`
 
