@@ -141,6 +141,20 @@ Convert various file formats (PDF, DOCX, XLSX, PPTX, HTML, images, etc.) to Mark
 <!-- AI: Run install/INSTALL.md to install the markitdown skill and CLI -->
 
 
+### learn-from-mistakes
+
+Capture AI corrections and build a persistent knowledge base of lessons learned, logged to Obsidian.
+
+- Detects when the user corrects the AI (phrases like "you should", "why not", "that's wrong", "use X instead")
+- Reflects on what went wrong: root cause, correct approach, and a distilled one-line rule
+- Logs each lesson to Obsidian with rich tags: scope (global/project), domain (api/kafka/redis/mysql/etc.), error type, AI tool
+- One note per lesson with descriptive filenames: `AI-Lesson-<description>-YYYY-MM-DD`
+- Cross-tool: compile lessons into steering files for Kiro, Cursor, Claude, Cline, Copilot, etc.
+
+> 💬 Tell your AI: "install learn-from-mistakes"
+<!-- AI: Run install/INSTALL.md to install the learn-from-mistakes skill -->
+
+
 ### obsidian
 
 Work with Obsidian vaults — create and edit Obsidian Flavored Markdown, Bases, JSON Canvas, and interact with vaults via the Obsidian CLI.
