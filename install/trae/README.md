@@ -44,22 +44,16 @@ The script reads from `install/mcp-servers.json`, auto-fills variables from `ins
 
 ## Install Skills
 
-Copy skill folders into `~/.trae/skills/`:
+Install skill folders into `~/.trae/skills/` (with script path resolution):
 
 ```bash
 # From the ai-cookbook root:
-mkdir -p ~/.trae/skills
-for skill in skills/*/SKILL.md; do
-  dir="$(dirname "$skill")"
-  name="$(basename "$dir")"
-  rm -rf ~/.trae/skills/"$name"
-  cp -r "$dir" ~/.trae/skills/"$name"
-done
+bash install/install-skills.sh trae
 ```
 
 Or install individually:
 
 ```bash
-cp -r skills/audit-sql ~/.trae/skills/
-cp -r skills/git-workflow ~/.trae/skills/
+bash install/install-skills.sh trae audit-sql
+bash install/install-skills.sh trae git-workflow
 ```

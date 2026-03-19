@@ -6,3 +6,4 @@ __pycache__/
 
 # MySQL metadata cache
 skills/mysql-cli/.metadata/
+.idea

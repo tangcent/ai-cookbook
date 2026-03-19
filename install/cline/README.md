@@ -44,22 +44,16 @@ The script reads from `install/mcp-servers.json`, adds Cline-specific fields (`d
 
 ## Install Skills
 
-Copy skill folders into `~/.cline/skills/`:
+Install skill folders into `~/.cline/skills/` (with script path resolution):
 
 ```bash
 # From the ai-cookbook root:
-mkdir -p ~/.cline/skills
-for skill in skills/*/SKILL.md; do
-  dir="$(dirname "$skill")"
-  name="$(basename "$dir")"
-  rm -rf ~/.cline/skills/"$name"
-  cp -r "$dir" ~/.cline/skills/"$name"
-done
+bash install/install-skills.sh cline
 ```
 
 Or install individually:
 
 ```bash
-cp -r skills/audit-sql ~/.cline/skills/
-cp -r skills/git-workflow ~/.cline/skills/
+bash install/install-skills.sh cline audit-sql
+bash install/install-skills.sh cline git-workflow
 ```
