@@ -65,7 +65,7 @@ Ask yourself (or let the agent ask you):
 | `all` | Install all CLIs + MCPs + Skills |
 | `all cli` | Install all CLIs (playwright-cli, gh, glab, markitdown) |
 | `all mcp` | Install all MCPs (chrome-devtools, grafana, maven-indexer) |
-| `all skills` | Install all Skills (audit-sql, grafana-dashboard, git-workflow, github-cli, gitlab-cli, mysql-cli, obsidian, playwright-cli, markitdown, spec-driven) |
+| `all skills` | Install all Skills (audit-sql, grafana-dashboard, git-workflow, github-cli, gitlab-cli, learn-from-mistakes, mysql-cli, obsidian, playwright-cli, markitdown, spec-driven) |
 | `<specific>` | Install a specific item by name (e.g. `grafana`, `git-workflow`, `playwright-cli`) |
 
 ## Step 3: Choose Target AI Tool(s)
@@ -232,5 +232,6 @@ After installation, some MCPs may still have placeholder values that need to be 
 | mysql-cli | Query, modify, and inspect MySQL with multi-instance auto-routing |
 | playwright-cli | Browser automation for web testing, form filling, screenshots, and data extraction |
 | markitdown | Convert various file formats to Markdown via CLI |
+| learn-from-mistakes | Capture AI corrections into Obsidian with rich tagging for cross-tool learning |
 | obsidian | Work with Obsidian vaults: Markdown, Bases, JSON Canvas, and CLI |
 | spec-driven | Spec-driven development: requirements, design, tasks, and execution |
