@@ -102,31 +102,56 @@ Decide whether to commit on the current branch or create a new branch:
 
 The AI should make this decision autonomously without asking the user, unless the situation is genuinely ambiguous (e.g., unrelated changes on a feature branch).
 
+Note: If Step 3 (rebase) later reveals the current branch is fully merged (all commits already on the default branch), switch to creating a new branch instead of continuing on the stale one.
+
 #### Step 3: Rebase Current Branch onto Latest Default Branch
 
-Before committing, check if the current branch needs rebasing:
+Before committing, ALWAYS rebase to ensure the branch is clean and up to date. This step catches multiple scenarios including squash-merged stale commits.
 
-1. Check if the branch has diverged or is behind the default branch:
+##### Why always rebase?
+
+A common pitfall: a branch was created from the default branch, commits were made, and a PR was squash-merged. The original branch still carries the old commits even though their content is already on the default branch (with different SHAs due to squash). Simple `rev-list --left-right --count` won't detect this because the SHAs differ. Rebasing handles this automatically — git drops commits whose patches are already applied upstream.
+
+##### Checks
+
+Run these checks to understand the branch state (for logging/informational purposes):
+
+1. Check behind/ahead count:
    ```
    git rev-list --left-right --count origin/<default-branch>..HEAD
    ```
-   The output is `<behind>\t<ahead>`. If `<behind>` > 0, the branch is behind.
-2. Check if the branch contains merge commits (indicating previous merges from default branch):
+2. Check for merge commits on the branch:
    ```
    git log --merges --oneline origin/<default-branch>..HEAD
    ```
-   If any merge commits are found, the branch has merged content from the default branch.
-3. **Rebase if** the branch is behind the default branch OR has merge commits:
-   - Stash any uncommitted changes first: `git stash`
-   - Rebase: `git rebase origin/<default-branch>`
-   - If conflicts occur:
-     - List the conflicted files
-     - Ask the user to resolve conflicts manually
-     - Continue rebase: `git rebase --continue`
-   - Restore stashed changes: `git stash pop` (if stashed earlier)
-4. **Skip rebase if** the branch is up to date with the default branch and has no merge commits.
+3. Check for already-applied (squash-merged) commits using `git cherry`:
+   ```
+   git cherry origin/<default-branch> HEAD
+   ```
+   Lines prefixed with `-` are commits already present on the default branch (squash-merged or cherry-picked). Lines prefixed with `+` are commits not yet on the default branch.
+   - If ALL commits show `-`, the branch is fully merged — inform the user and consider whether a new branch is more appropriate.
+   - If SOME commits show `-`, those stale commits will be dropped during rebase.
 
-This keeps the branch history clean with linear commits on top of the latest default branch.
+##### Rebase procedure
+
+1. Stash any uncommitted changes: `git stash`
+2. Rebase onto the latest default branch:
+   ```
+   git rebase origin/<default-branch>
+   ```
+   Git will automatically skip commits whose patches are already applied upstream (squash-merged commits). You may see warnings like `skipped previously applied commit` — this is expected and correct.
+3. If conflicts occur:
+   - List the conflicted files
+   - Ask the user to resolve conflicts manually
+   - Continue rebase: `git rebase --continue`
+4. Restore stashed changes: `git stash pop` (if stashed earlier)
+
+##### After rebase
+
+- Verify the remaining commits: `git log --oneline origin/<default-branch>..HEAD`
+- If no commits remain (all were already merged), the branch is fully merged. Inform the user and suggest creating a new branch for new work instead of reusing this one.
+
+This keeps the branch history clean with only genuinely new commits on top of the latest default branch.
 
 #### Step 4: Stage and Commit
 
