@@ -49,11 +49,12 @@ Build and modify Grafana dashboards following established style conventions — 
 
 ### git-workflow
 
-Git workflow management with branch prefixes, conventional commits, and advanced synchronization operations.
+Git workflow automation with safer branch decisions, conventional commits, rebasing, syncing, and MR links.
 
-- Create branches with `feature/`, `release/`, `fix/` prefixes
-- Conventional commit messages (`feat:`, `fix:`, `amend:`, `chore:`, `release:`)
-- Sync feature branches onto latest master, consolidate branches, and generate merge request URLs
+- Create branches with inferred prefixes (`feature/`, `fix/`, `hotfix/`, `release/`, `chore/`)
+- Safer commit flow with auto rebase onto default branch and controlled force-push
+- Sync active branches and consolidate integration branches with confirmations
+- Generate GitLab MR URLs from current remote automatically
 
 > 💬 Tell your AI: "install git-workflow"
 <!-- AI: Run install/INSTALL.md to install the git-workflow skill -->
@@ -61,13 +62,11 @@ Git workflow management with branch prefixes, conventional commits, and advanced
 
 ### github-cli
 
-Interact with GitHub via the `gh` CLI — manage repositories, issues, pull requests, releases, code search, and API calls.
+Operate GitHub with the `gh` CLI for repositories, pull requests, issues, releases, CI runs, and API calls.
 
-- Create, review, and merge pull requests
-- Create and manage issues with labels, assignees, and comments
-- Search code, issues, PRs, and repositories
-- Manage releases, GitHub Actions workflows, and raw API calls
-- Structured output with `--json` and `--jq` for programmatic use
+- Enforces `gh`-first execution for GitHub tasks
+- Works with structured output (`--json` + `--jq`) for scripting and summaries
+- Loads detailed PR/issue template workflows from `github-cli/references/*` only when needed
 
 > 💬 Tell your AI: "install github-cli"
 <!-- AI: Run install/INSTALL.md to install the github-cli skill -->
@@ -75,16 +74,25 @@ Interact with GitHub via the `gh` CLI — manage repositories, issues, pull requ
 
 ### gitlab-cli
 
-Interact with GitLab via the `glab` CLI — manage repositories, issues, merge requests, pipelines, releases, code search, and API calls.
+Operate GitLab with the `glab` CLI for repositories, merge requests, issues, pipelines, releases, and API calls.
 
-- Create, review, and merge merge requests
-- Create and manage issues with labels, assignees, and comments
-- View and manage CI/CD pipelines and jobs
-- Manage releases, tags, and raw GitLab API calls
-- Structured output with `--output json` and `--jq` for programmatic use
+- Auto-detects self-hosted GitLab hostname from git remotes
+- Enforces `glab`-first execution and `glab api` for raw API calls
+- Loads detailed MR template workflow from `gitlab-cli/references/create-mr.md` only when needed
 
 > 💬 Tell your AI: "install gitlab-cli"
 <!-- AI: Run install/INSTALL.md to install the gitlab-cli skill -->
+
+### create-skill
+
+Create or update skills in this repository following local skill authoring standards.
+
+- Scaffolds `skills/<name>/SKILL.md` with valid frontmatter
+- Enforces naming/trigger-description conventions
+- Requires skill catalog updates in `README.md` and `install/INSTALL.md`
+
+> 💬 Tell your AI: "install create-skill"
+<!-- AI: Run install/INSTALL.md to install the create-skill skill -->
 
 
 ### mysql-cli
@@ -139,6 +147,37 @@ Convert various file formats (PDF, DOCX, XLSX, PPTX, HTML, images, etc.) to Mark
 
 > 💬 Tell your AI: "install markitdown"
 <!-- AI: Run install/INSTALL.md to install the markitdown skill and CLI -->
+
+
+### kafka-viewer
+
+Inspect Kafka servers, topics, and messages via `kafka-view-cli` to verify data correctness after changes.
+
+- List Kafka servers and topics
+- Read and sample recent messages from any topic
+- Verify payload correctness after deploys or code changes
+- Filter output with `--jq` for targeted inspection
+
+
+### xxljob-test
+
+Test XxlJob handlers locally by triggering them via HTTP POST with a simple script.
+
+- Launch your service locally, then trigger any `@XxlJob` handler with `xxljob-trigger`
+- Script accepts `executorHandler` and optional `executorParams` — builds the full request body for you
+- Verify results via HTTP response and application logs
+
+> 💬 Tell your AI: "install xxljob-test"
+<!-- AI: Run install/INSTALL.md to install the xxljob-test skill -->
+
+
+### zadig-deploy
+
+Deploy services, check deployment status, and inspect deployed branches in [Zadig](https://zadig-local.tec-develop.cn). Supports browser automation via Playwright or Chrome DevTools MCP.
+
+- Deploy a service to test environments (`test-01`, `test-02`)
+- Check deployment status and running images
+- Identify which branch/commit is currently deployed
 
 
 ### learn-from-mistakes
