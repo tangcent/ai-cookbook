@@ -65,7 +65,7 @@ Ask yourself (or let the agent ask you):
 | `all` | Install all CLIs + MCPs + Skills |
 | `all cli` | Install all CLIs (playwright-cli, gh, glab, markitdown) |
 | `all mcp` | Install all MCPs (chrome-devtools, grafana, maven-indexer) |
-| `all skills` | Install all Skills (audit-sql, grafana-dashboard, git-workflow, github-cli, gitlab-cli, learn-from-mistakes, mysql-cli, obsidian, playwright-cli, markitdown, spec-driven) |
+| `all skills` | Install all Skills (audit-sql, create-skill, grafana-dashboard, git-workflow, github-cli, gitlab-cli, learn-from-mistakes, mysql-cli, obsidian, playwright-cli, markitdown, spec-driven) |
 | `<specific>` | Install a specific item by name (e.g. `grafana`, `git-workflow`, `playwright-cli`) |
 
 ## Step 3: Choose Target AI Tool(s)
@@ -225,10 +225,11 @@ After installation, some MCPs may still have placeholder values that need to be 
 | Name | Description |
 |------|-------------|
 | audit-sql | SQL audit on MyBatis mapper XML files |
+| create-skill | Create or update repository skills with local standards |
 | grafana-dashboard | Build Grafana dashboards with consistent style conventions |
-| git-workflow | Branch prefixes, conventional commits, sync operations |
-| github-cli | Interact with GitHub via the `gh` CLI |
-| gitlab-cli | Interact with GitLab via the `glab` CLI |
+| git-workflow | Safe branch/commit/rebase/push workflow and sync utilities |
+| github-cli | Operate GitHub via the `gh` CLI with on-demand template workflows in references |
+| gitlab-cli | Operate GitLab via the `glab` CLI with on-demand MR template workflow in references |
 | mysql-cli | Query, modify, and inspect MySQL with multi-instance auto-routing |
 | playwright-cli | Browser automation for web testing, form filling, screenshots, and data extraction |
 | markitdown | Convert various file formats to Markdown via CLI |
