@@ -38,22 +38,24 @@ The following conventions are extracted from the user's existing dashboards. **A
 ### 1. Overall Structure
 
 - **Folder**: Place dashboards in the appropriate project folder. Ask the user if unsure.
-- **Tags**: Every dashboard MUST have descriptive, lowercase, hyphenated tags (e.g. `http`, `performance`, `api`, `business`, `database`, `queue`). Tags should cover: the domain, the component, and the dashboard purpose.
+- **Tags**: Every dashboard MUST have descriptive, lowercase, hyphenated tags (e.g. `http`, `performance`, `tracking`, `business`, `sdk`, `grpc`, `kafka`). Tags should cover: the domain, the component, and the dashboard purpose.
+- **Project/application identity tags are mandatory on new dashboards**: When creating a dashboard, always add the project name and application name as tags, normalized to lowercase hyphenated form. Example: project `Ads Delivery Platform` -> tag `ads-delivery-platform`; application `tracking-api` -> tag `tracking-api`.
+- **Do not create a new dashboard until those identity tags are known**: Infer them from the user's request, folder context, datasource labels, or existing related dashboards. If still unclear, ask the user for the project name and application name before creating the dashboard skeleton.
 - **Description**: Every dashboard MUST have a `description` field — one sentence summarizing what it monitors and for which service.
 - **Default time range**: `now-6h` to `now` for business/performance dashboards; `now-1h` to `now` for operational/real-time dashboards.
 - **Auto-refresh**: Set `refresh: "30s"` only for operational dashboards (queues, pipelines). Omit for analytical dashboards.
 
 ### 2. Template Variables
 
-- Include environment/cluster filter variables as appropriate for your infrastructure:
+- Always include a `cluster` variable:
   - Type: `query`
-  - Datasource: Use the appropriate Prometheus datasource UID (discover via the Grafana MCP)
-  - Query pattern: `label_values(<a_relevant_metric>{...}, <label>)`
+  - Datasource: Prometheus (uid `M2qX4-R4k`)
+  - Query pattern: `label_values(<a_relevant_metric>{...}, cluster)`
   - `includeAll: true`, `allValue: ".*"`
-- Include an `app` or `service` variable when the dashboard covers multiple applications:
-  - Query pattern: `label_values(<metric>{...}, app)`
+- Include an `app` variable when the dashboard covers multiple apps:
+  - Query pattern: `label_values(<metric>{kubernetes_namespace="<ns>"}, app)`
   - `includeAll: false`
-- Additional filter variables (e.g. `method`, `status`, `pod`) as custom or query types when needed.
+- Additional filter variables (e.g. `method_filter`, `brand`, `pod`) as custom or query types when needed.
 - Variable queries use `label_values(...)` syntax, refresh on dashboard load (`refresh: 1`).
 
 ### 3. Layout — Row & Panel Organization
@@ -125,14 +127,14 @@ When the count doesn't divide evenly into 24, **widen the last few panels** to a
 
 **A single timeseries MUST be `w:24`** — never `w:12` alone on a row.
 
-**Pie + Timeseries paired rows**:
+**Pie + Timeseries paired rows** (used in Validation dashboards):
 
 Each dimension gets a pie chart + timeseries side by side. Two pairs per row:
 `[pie w:4] [timeseries w:8] [pie w:4] [timeseries w:8]` = 24 ✓
 
 One pair alone on a row: `[pie w:6] [timeseries w:18]` = 24 ✓ (widen to fill)
 
-**Stat + Timeseries mixed rows**:
+**Stat + Timeseries mixed rows** (used in Pipeline dashboards):
 
 When combining stat cards with a large timeseries in the same row, ensure they tile to 24:
 `[stat w:4] [stat w:3] [timeseries w:17]` = 24 ✓
@@ -180,6 +182,7 @@ Concretely, when pairing stat(s) with a timeseries (`h:8`):
 | Error Rate | `percentunit` | `green` (base) → `orange` at 0.01 → `red` at 0.05 |
 | Mean Latency | `ms` | `green` (base) → `yellow` at 50 → `red` at 100 |
 | P95 Latency | `ms` | `green` (base) → `yellow` at 100 → `red` at 200 |
+| Kafka Success Rate | `percentunit` | `green` (base) → `yellow` at 0.99 → `red` below 0.99 |
 | Flagged / Blocked % | `percentunit` | `green` (base) → `orange` at 0.05 → `red` at 0.10 |
 | Queue depth / Pending | `short` | `green` (base) → `yellow` at warning → `red` at critical (context-dependent) |
 
@@ -226,8 +229,8 @@ Concretely, when pairing stat(s) with a timeseries (`h:8`):
 
 ### 8. PromQL Conventions
 
-- **Always filter by your environment/cluster variable** (e.g. `cluster=~"$cluster"`) in every query.
-- **Always filter by `app="$app"`** (or equivalent) when the app/service variable exists.
+- **Always filter by `cluster=~"$cluster"`** in every query.
+- **Always filter by `app="$app"`** when the `app` variable exists.
 - For stat panels showing totals over the selected range: use `sum(increase(...[$__range]))`.
 - For stat panels showing averages: use `avg_over_time(sum(rate(...[5m]))[$__range])`.
 - For stat panels showing ratios: use `sum(increase(...{success}[$__range])) / clamp_min(sum(increase(...[$__range])), 1)`.
@@ -235,7 +238,7 @@ Concretely, when pairing stat(s) with a timeseries (`h:8`):
 - For timeseries rate panels: use `$__rate_interval` or `1m` as the rate window.
 - Latency from histogram: `histogram_quantile(0.XX, sum(rate(..._bucket{...}[interval])) by (le)) * 1000`.
 - Mean latency: `sum(rate(..._sum{...}[interval])) / sum(rate(..._count{...}[interval])) * 1000`.
-- Metric naming convention: follow the pattern used in your environment (e.g. `<namespace>_<component>_<metric_name>_<unit>`).
+- Metric naming convention observed: `<namespace>_<component>_<metric_name>_<unit>` (e.g. `as_sdk_tracking_sdk_tracking_request_seconds_count`).
 
 ### 9. Panel Descriptions
 
@@ -246,14 +249,14 @@ Concretely, when pairing stat(s) with a timeseries (`h:8`):
 - For timeseries panels: State what the chart shows and how it's computed.
   - Example: `"Aggregate HTTP request throughput across all endpoints, computed as a 1-minute rate."`
 - For pie/bar panels: State the dimension being broken down.
-  - Example: `"Top validation issue types over the selected time range."`
+  - Example: `"Top Pixel validation issue types over the selected time range."`
 
 ### 10. Panel Title Naming Conventions
 
-- Stat panels: Short noun phrases — `Total Requests`, `Mean QPS`, `Success Rate`, `P95 Latency`, `Error Rate`.
-- Timeseries panels: Descriptive — `Request Throughput by Status (QPS)`, `Request Latency`, `Non-Success Request Rate`.
+- Stat panels: Short noun phrases — `Total Events`, `Mean QPS`, `Success Rate`, `P95 Latency`, `Error Rate`.
+- Timeseries panels: Descriptive — `Event Throughput by Status (QPS)`, `Request Latency`, `Non-Success Request Rate`.
 - Paired pie+timeseries: `<Subject> — % by <Dim>` and `<Subject> — Rate by <Dim>`.
-- Row titles: Functional groupings — `Overview`, `Detail`, `Error Detail`, `Queue & Throughput`, `Latency`, `Runtime Health`.
+- Row titles: Functional groupings — `Overview`, `Detail`, `Error Detail`, `Queue & Throughput`, `Latency & Audit Quality`, `Runtime Health`.
 
 ### 11. Dashboard Patterns by Category
 
@@ -263,22 +266,22 @@ Timeseries: QPS → Latency Percentiles → Top 10 Slowest Endpoints → Error R
 Drill-down rows: Detailed URI Performance, Error Details.
 
 #### Business Metrics Dashboard
-Overview stats: Total Requests → Mean QPS → Success Rate → Mean Latency → P95 Latency → Error Rate.
-Timeseries: Request Throughput by Status → Avg Latency.
-Drill-down rows: Regional Breakdown, Detail, Error Detail.
+Overview stats: Total Events → Mean QPS → Success Rate → Mean Latency → P95 Latency → HTTP Error Rate → Kafka Success Rate → Flagged %.
+Timeseries: Event Throughput by Status → Avg Latency.
+Drill-down rows: Regional Breakdown, Detail, Error Detail, SDK Version Adoption.
 
 #### Outbound API Performance Dashboard
-Overview stats: grouped by protocol/client — each group has Total Calls → Success Rate → QPS → Mean Latency.
-Detail rows: one per protocol or client type.
+Overview stats: grouped by protocol (gRPC / HTTP Client / Feign) — each group has Total Calls → Success Rate → QPS → Mean Latency.
+Detail rows: one per protocol + Kafka Producer.
 
 #### Pipeline / Queue Dashboard
-Overview stats: queue depths (Pending, Processing) → resource counts → throughput stats (Request Rate, Success Rate, Avg Latency).
+Overview stats: queue depths (Pending, Processing, Dispatched) → resource counts (Engines Registered, Available) → throughput stats (Request Rate, Success Rate, Avg Latency).
 Timeseries: Pipeline State Over Time (multiple gauge queries overlaid).
-Detail rows: one per pipeline stage.
+Detail rows: one per pipeline stage (Ingestion, Dispatch, Engine Pool, Result Processing, Callback, System Health).
 
 #### Validation / Quality Dashboard
-Overview stats: Total Requests → Invalid Ratio → Rejected % → Flagged %.
-Sections per event source: Total Issues → Avg Rate → Top 10 bar gauge → paired (pie + timeseries) for each dimension.
+Overview stats: Total Events → Invalid Ratio → Rejected % → Flagged %.
+Sections per event source (SDK / Pixel): Total Issues → Avg Rate → Top 10 bar gauge → paired (pie + timeseries) for each dimension.
 
 ### 12. Incremental Dashboard Building — Avoid Large JSON
 
@@ -289,12 +292,14 @@ Instead, use **incremental patch operations** to build and modify dashboards pie
 #### Creating a New Dashboard
 
 1. Create a minimal skeleton first — just the title, description, tags, variables, and time range. No panels.
-2. Append panels one row at a time using patch `add` operations.
+2. Confirm the skeleton tags include both normalized identity tags: `<project-name>` and `<application-name>`.
+3. Append panels one row at a time using patch `add` operations.
 
 ```
-Step 1: update_dashboard with minimal dashboard JSON (no panels, just metadata + templating)
-Step 2: update_dashboard with uid + operations: [{"op": "add", "path": "$.panels/- ", "value": <row panel>}]
-Step 3: update_dashboard with uid + operations: [{"op": "add", "path": "$.panels/- ", "value": <stat panel 1>}]
+Step 1: collect or infer the project name and application name, normalize them to lowercase hyphenated tags
+Step 2: update_dashboard with minimal dashboard JSON (no panels, just metadata + templating), ensuring `tags` includes both identity tags plus any domain/purpose tags
+Step 3: update_dashboard with uid + operations: [{"op": "add", "path": "$.panels/- ", "value": <row panel>}]
+Step 4: update_dashboard with uid + operations: [{"op": "add", "path": "$.panels/- ", "value": <stat panel 1>}]
 ...repeat for each panel or small batch of panels
 ```
 
@@ -320,10 +325,11 @@ Use `uid` + `operations` (patch mode) to make targeted changes:
 
 ## Workflow
 
-1. **Understand the requirement**: Ask the user what service/component the dashboard is for, what metrics are available, and what the monitoring goal is.
+1. **Understand the requirement**: Ask the user what project and application the dashboard belongs to, what service/component it is for, what metrics are available, and what the monitoring goal is.
 2. **Discover metrics**: Use `list_prometheus_metric_names` and `list_prometheus_label_values` to find available metrics and labels for the target service.
 3. **Pick a dashboard pattern** from the categories above (or combine patterns).
-4. **Create the dashboard skeleton**: Use `update_dashboard` with a minimal JSON — title, description, tags, templating variables, time range. No panels yet.
-5. **Add panels incrementally**: Use `update_dashboard` with `uid` + `operations` (patch mode) to append panels row by row — overview stats first, then timeseries, then drill-down rows.
-6. **Verify**: Use `get_dashboard_summary` to confirm the dashboard structure is correct.
-7. **Share**: Use `generate_deeplink` to give the user a direct link.
+4. **Build the required tag set**: Normalize the project name and application name into lowercase hyphenated tags, then add any extra domain/purpose tags needed for discoverability.
+5. **Create the dashboard skeleton**: Use `update_dashboard` with a minimal JSON — title, description, tags, templating variables, time range. No panels yet. The `tags` array must include both the project tag and the application tag.
+6. **Add panels incrementally**: Use `update_dashboard` with `uid` + `operations` (patch mode) to append panels row by row — overview stats first, then timeseries, then drill-down rows.
+7. **Verify**: Use `get_dashboard_summary` to confirm the dashboard structure is correct, including the required identity tags.
+8. **Share**: Use `generate_deeplink` to give the user a direct link.
