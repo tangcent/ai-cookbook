@@ -18,9 +18,40 @@ Activate this skill when the user asks to:
 - Interact with a running Obsidian instance via the CLI
 - Develop or debug Obsidian plugins or themes
 
+## Guidance: Summarizing Code Projects into Obsidian
+
+When asked to summarize or document a codebase into Obsidian notes, focus on information that is **hard to reconstruct from reading code** — things a developer needs to orient themselves but cannot quickly grep for:
+
+**Write into Obsidian (high value):**
+- Architecture decisions and rationale (why, not what)
+- Module responsibilities and boundaries
+- Data flow across services and systems (Kafka topics, API contracts between services)
+- Non-obvious relationships and dependencies between modules
+- Configuration knobs and their effects (what Apollo keys control what behavior)
+- Deployment topology (which starter runs where, scaling strategy)
+- Business context that code comments don't capture (what "GoCarty forward" means, why dual-brand exists)
+- Gotchas, pitfalls, and tribal knowledge
+
+**Do NOT write into Obsidian (low value — AI can re-read from code):**
+- Exhaustive lists of every class, method, or field
+- Full database column listings (just note the table name and purpose)
+- Complete API request/response schemas (just note the endpoint and what it does)
+- Code-level implementation details (interceptor ordering numbers, exact thread pool sizes)
+- Information that duplicates what's already in README.md or code comments
+
+The goal is a **navigation map**, not a second copy of the source code. Keep notes concise and link-heavy. A developer reading these notes should know *where to look* and *why things are the way they are*, then go read the actual code.
+
 ## Obsidian Flavored Markdown
 
 Obsidian extends CommonMark and GFM with wikilinks, embeds, callouts, properties, comments, and other syntax. Standard Markdown (headings, bold, italic, lists, quotes, code blocks, tables) is assumed knowledge.
+
+### Vault Organization
+
+Focus on **how to use Obsidian features effectively** (links, embeds, properties, bases, canvas, CLI), not on enforcing a fixed vault structure.
+
+- Do **not** require a specific folder taxonomy (for example, `Projects/` + `Global/`)
+- Do **not** impose naming conventions unless the user explicitly asks for them
+- Adapt file paths and examples to the user's existing vault layout
 
 ### Workflow: Creating an Obsidian Note
 
@@ -330,7 +361,8 @@ See [CANVAS_EXAMPLES.md](references/CANVAS_EXAMPLES.md) for complete examples (m
 
 Use the `obsidian` CLI to interact with a running Obsidian instance. Requires Obsidian to be open.
 
-Run `obsidian help` for all available commands. Full docs: https://help.obsidian.md/cli
+See [CLI_REFERENCE.md](references/CLI_REFERENCE.md) for the complete command reference.
+Full docs: https://help.obsidian.md/cli
 
 ### Syntax
 
@@ -360,11 +392,70 @@ Commands target the most recently focused vault by default. Use `vault=<name>` f
 obsidian vault="My Vault" search query="test"
 ```
 
+### CLI Execution Guidelines
+
+**Always use `timeout` when running `obsidian` commands** to prevent hanging:
+
+```bash
+# Good: always set a timeout (e.g., 10 seconds)
+obsidian read file="My Note"    # with timeout=10000 on executeBash
+```
+
+### Workflow: Creating Notes with Complex Content
+
+**CRITICAL**: The `obsidian create` command's `content=` parameter passes through the shell. Backticks, `$`, `!`, and other shell metacharacters will be interpreted by the shell, corrupting the content.
+
+**AVOID building large shell commands, heredocs, or writing huge content= strings.** They are fragile, hard to debug, and frequently fail. Instead, use the **create + append** approach below.
+
+**Preferred approach — create then append in small chunks:**
+
+1. Create the note with a simple skeleton (no special characters):
+   ```bash
+   obsidian create name="My Note" path="folder/My Note.md" silent
+   ```
+
+2. Append content in small, manageable chunks. Each `obsidian append` call adds one section:
+   ```bash
+   obsidian append file="My Note" content="## Section 1\nSome plain text here."
+   obsidian append file="My Note" content="\n## Section 2\nMore content here."
+   ```
+
+3. For content with shell-unsafe characters (backticks, `$`, code blocks), use `fsWrite`/`fsAppend` targeting the vault path directly:
+   ```bash
+   obsidian vault info=path
+   # Returns e.g. /Users/you/Documents/Obsidian Vault
+   ```
+   Then use `fsWrite` or `fsAppend` with the full vault file path. Obsidian auto-detects file changes.
+
+4. Set properties via CLI. **CRITICAL for list properties (tags, aliases, cssclasses):** you MUST include `type="list"` or the comma-separated value is stored as one single string, not split into individual items:
+   ```bash
+   # WRONG — creates one tag "project, active" (a single string):
+   obsidian property:set name="tags" value="project, active" file="My Note"
+
+   # CORRECT — creates two separate tags ["project", "active"]:
+   obsidian property:set name="tags" type="list" value="project, active" file="My Note"
+
+   # Scalar properties don't need type=:
+   obsidian property:set name="status" value="active" file="My Note"
+   ```
+
+**Key rules:**
+- Keep each `obsidian append` call short and simple — one section at a time
+- Never put code blocks or backticks in `content=` — use `fsWrite`/`fsAppend` for those sections
+- Never build a single giant shell command — break it into multiple small calls
+- Always use `timeout` on `obsidian` CLI calls to prevent hanging
+- **Always use `type="list"` when setting tags, aliases, or cssclasses** — without it, comma-separated values become a single string
+
+**For simple notes** (no special characters at all), a single `obsidian create` with `content=` is fine:
+```bash
+obsidian create name="Simple Note" content="# Title\nSome plain text" silent
+```
+
 ### Common Patterns
 
 ```bash
 obsidian read file="My Note"
-obsidian create name="New Note" content="# Hello" template="Template" silent
+obsidian create name="New Note" content="# Hello" silent
 obsidian append file="My Note" content="New line"
 obsidian search query="search term" limit=10
 obsidian daily:read
@@ -373,6 +464,9 @@ obsidian property:set name="status" value="done" file="My Note"
 obsidian tasks daily todo
 obsidian tags sort=count counts
 obsidian backlinks file="My Note"
+obsidian vault info=path              # Get vault filesystem path
+obsidian folders                      # List vault folders
+obsidian files folder="My Folder"      # List files in a folder
 ```
 
 Use `--copy` to copy output to clipboard. Use `silent` to prevent files from opening. Use `total` on list commands to get a count.
@@ -405,3 +499,4 @@ obsidian dev:mobile on
 - [Bases Syntax](https://help.obsidian.md/bases/syntax)
 - [JSON Canvas Spec 1.0](https://jsoncanvas.org/spec/1.0/)
 - [Obsidian CLI](https://help.obsidian.md/cli)
+- [CLI Command Reference](references/CLI_REFERENCE.md)
