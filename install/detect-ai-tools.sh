@@ -31,6 +31,14 @@ else
   echo "claude: not found"
 fi
 
+# --- Codex ---
+if command -v codex &>/dev/null || [ -f "$HOME/.codex/config.toml" ] || [ -d "$HOME/.codex/skills" ]; then
+  echo "codex: available"
+  found=1
+else
+  echo "codex: not found"
+fi
+
 # --- Cline (VS Code extension) ---
 CLINE_SETTINGS="$HOME/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json"
 if command -v code &>/dev/null && code --list-extensions 2>/dev/null | grep -qi "saoudrizwan.claude-dev"; then
