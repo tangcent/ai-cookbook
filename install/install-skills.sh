@@ -9,6 +9,7 @@
 #
 # Examples:
 #   bash install/install-skills.sh kiro                  # all skills into Kiro
+#   bash install/install-skills.sh codex                 # all skills into Codex
 #   bash install/install-skills.sh all                   # all skills into all tools
 #   bash install/install-skills.sh kiro mysql-cli        # one skill into Kiro
 
@@ -18,14 +19,15 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SKILLS_SRC="$REPO_ROOT/skills"
 
-# ── Tool → skill directory mapping ──────────────────────────────────
-ALL_TOOLS="cursor kiro claude cline opencode antigravity trae trae-cn"
+# ── Tool → skill directory mapping ────────────────────────────────────
+ALL_TOOLS="cursor kiro claude codex cline opencode antigravity trae trae-cn"
 
 tool_dir() {
   case "$1" in
     cursor)       echo "$HOME/.cursor/skills" ;;
     kiro)         echo "$HOME/.kiro/skills" ;;
     claude)       echo "$HOME/.claude/skills" ;;
+    codex)        echo "$HOME/.codex/skills" ;;
     cline)        echo "$HOME/.cline/skills" ;;
     opencode)     echo "$HOME/.config/opencode/skills" ;;
     antigravity)  echo "$HOME/.gemini/antigravity/skills" ;;
@@ -35,11 +37,11 @@ tool_dir() {
   esac
 }
 
-# ── Parse arguments ─────────────────────────────────────────────────
+# ── Parse arguments ───────────────────────────────────────────────────
 TOOL="${1:-all}"
 shift || true
 
-# ── Resolve target tools ────────────────────────────────────────────
+# ── Resolve target tools ──────────────────────────────────────────────
 if [ "$TOOL" = "all" ]; then
   TARGET_TOOLS="$ALL_TOOLS"
 else
@@ -51,7 +53,7 @@ else
   TARGET_TOOLS="$TOOL"
 fi
 
-# ── Resolve target skills ───────────────────────────────────────────
+# ── Resolve target skills ─────────────────────────────────────────────
 SKILL_NAMES="$*"
 if [ -z "$SKILL_NAMES" ]; then
   SKILL_NAMES=""
@@ -62,7 +64,7 @@ if [ -z "$SKILL_NAMES" ]; then
   done
 fi
 
-# ── Rewrite scripts/ paths to absolute in a SKILL.md ────────────────
+# ── Rewrite scripts/ paths to absolute in a SKILL.md ──────────────────
 rewrite_script_paths() {
   local skill_md="$1"
   local skill_dir
@@ -83,7 +85,7 @@ rewrite_script_paths() {
   fi
 }
 
-# ── Install ─────────────────────────────────────────────────────────
+# ── Install ───────────────────────────────────────────────────────────
 installed=0
 for tool in $TARGET_TOOLS; do
   dest_base="$(tool_dir "$tool")"
