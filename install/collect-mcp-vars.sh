@@ -36,6 +36,12 @@ for f in \
   [ -f "$f" ] && CONFIG_FILES+=("$f")
 done
 
+# Codex
+for f in \
+  "$HOME/.codex/config.toml"; do
+  [ -f "$f" ] && CONFIG_FILES+=("$f")
+done
+
 # Cline (VS Code extension)
 for f in \
   "$HOME/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json"; do
@@ -90,6 +96,8 @@ import json
 import sys
 import os
 import re
+import tomllib
+from pathlib import Path
 
 config_files = sys.argv[1:-1]
 output_file = sys.argv[-1]
@@ -112,15 +120,24 @@ PLACEHOLDER_RE = re.compile(
 collected = {}  # friendly_key -> value
 commands = {}   # mcp_name -> command path
 
+def load_config(fpath):
+    text = Path(fpath).read_text()
+    if fpath.endswith(".toml"):
+        return tomllib.loads(text)
+    return json.loads(text)
+
 for fpath in config_files:
     try:
-        with open(fpath) as f:
-            data = json.load(f)
-    except (json.JSONDecodeError, IOError):
+        data = load_config(fpath)
+    except (json.JSONDecodeError, tomllib.TOMLDecodeError, OSError):
         continue
 
-    # Find mcpServers (could be top-level or nested under "mcp")
-    servers = data.get("mcpServers", data.get("mcp", {}))
+    # Find tool-specific MCP containers.
+    servers = data.get("mcpServers")
+    if servers is None:
+        servers = data.get("mcp")
+    if servers is None:
+        servers = data.get("mcp_servers", {})
     if not isinstance(servers, dict):
         continue
 
