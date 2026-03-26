@@ -28,6 +28,7 @@ Supported tools:
 | Cursor | IDE | `~/.cursor/mcp.json` (key: `mcpServers`) |
 | Kiro | IDE | `~/.kiro/settings/mcp.json` |
 | Claude Code | CLI | `~/.claude.json` (key: `mcpServers`) |
+| Codex | CLI | `~/.codex/config.toml` (table: `mcp_servers`) |
 | Cline | VS Code Extension | `~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json` |
 | OpenCode | CLI | `~/.config/opencode/opencode.json` (key: `mcp`) |
 | Antigravity | IDE | `~/.gemini/antigravity/mcp_config.json` |
@@ -75,7 +76,7 @@ Ask yourself (or let the agent ask you):
 | Option | Description |
 |--------|-------------|
 | `all` | Install into all detected AI tools |
-| `<specific>` | Install into a specific tool (e.g. `kiro`, `claude`, `cline`) |
+| `<specific>` | Install into a specific tool (e.g. `kiro`, `claude`, `codex`, `cline`) |
 
 ## Step 4: Run Installation
 
@@ -101,6 +102,7 @@ python3 install/cursor/merge-mcp.py <mcp-name>
 python3 install/kiro/merge-mcp.py <mcp-name>
 python3 install/claude/merge-mcp.py <mcp-name>
 python3 install/cline/merge-mcp.py <mcp-name>
+python3 install/codex/merge-mcp.py <mcp-name>
 python3 install/opencode/merge-mcp.py <mcp-name>
 python3 install/antigravity/merge-mcp.py <mcp-name>
 python3 install/trae/merge-mcp.py <mcp-name>
@@ -140,6 +142,7 @@ python3 install/cursor/merge-mcp.py
 python3 install/kiro/merge-mcp.py
 python3 install/claude/merge-mcp.py
 python3 install/cline/merge-mcp.py
+python3 install/codex/merge-mcp.py
 python3 install/opencode/merge-mcp.py
 python3 install/antigravity/merge-mcp.py
 python3 install/trae/merge-mcp.py
@@ -162,6 +165,7 @@ Each tool has its own README with full instructions for installing CLIs, MCPs, a
 | Kiro | `python3 install/kiro/merge-mcp.py` | [install/kiro/README.md](kiro/README.md) |
 | Claude Code | `python3 install/claude/merge-mcp.py` | [install/claude/README.md](claude/README.md) |
 | Cline | `python3 install/cline/merge-mcp.py` | [install/cline/README.md](cline/README.md) |
+| Codex | `python3 install/codex/merge-mcp.py` | [install/codex/README.md](codex/README.md) |
 | OpenCode | `python3 install/opencode/merge-mcp.py` | [install/opencode/README.md](opencode/README.md) |
 | Antigravity | `python3 install/antigravity/merge-mcp.py` | [install/antigravity/README.md](antigravity/README.md) |
 | Trae | `python3 install/trae/merge-mcp.py` | [install/trae/README.md](trae/README.md) |
@@ -185,6 +189,7 @@ After installation, some MCPs may still have placeholder values that need to be 
 | Kiro | `~/.kiro/settings/mcp.json` |
 | Claude Code | `~/.claude.json` |
 | Cline | `~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json` |
+| Codex | `~/.codex/config.toml` |
 | OpenCode | `~/.config/opencode/opencode.json` |
 | Antigravity | `~/.gemini/antigravity/mcp_config.json` |
 | Trae | `~/Library/Application Support/Trae/User/mcp.json` |
