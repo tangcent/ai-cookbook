@@ -16,8 +16,17 @@ A lightweight alternative to the full Spec flow. Combines requirements gathering
 1. Understand the user's goal (brief requirements gathering)
 2. Survey the codebase for relevant context
 3. Propose an approach with inline design notes
-4. Break down into ordered tasks with acceptance criteria
+4. Break down into ordered tasks with acceptance criteria — apply [best-practices.md](best-practices.md) when splitting tasks (test-first for most work, contract-first for APIs/interfaces)
 5. Produce a single combined plan document
+
+## Inputs
+
+This mode reads from:
+
+- **User request:** The goal, scope, and any constraints
+- **Project codebase:** Relevant code, patterns, conventions, affected files
+
+> **Important — Preserve original references.** Record URLs, external docs, and key files consulted in the plan. Execute mode runs in a separate sub-agent — the plan must be self-sufficient with enough context (approach, acceptance criteria, file targets) that the executor doesn't need the original conversation.
 
 ## Information to Collect
 
@@ -76,8 +85,8 @@ Include inline design notes where relevant rather than a separate design doc.]
   - [ ] 1.2 [Sub-task]
 
 - [ ] 2. [Task title]
-  - [ ] 2.1 [Sub-task]
-  - [ ]* 2.2 Write test for [feature]
+  - [ ] 2.1 Write test for [feature]
+  - [ ] 2.2 Implement [feature] to satisfy 2.1
 
 - [ ] 3. Checkpoint — Verify [what to verify]
 

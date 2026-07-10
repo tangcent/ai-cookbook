@@ -16,6 +16,16 @@ Break the design into small, ordered, actionable implementation tasks that can b
 8. Cross-reference tasks back to requirements
 9. Produce a formal task list document (with sub-files for large specs)
 
+## Inputs
+
+This mode reads from:
+
+- **Upstream artifacts:** `.spec/{spec_name}/requirements.md` and `.spec/{spec_name}/design.md` (and sub-files if large feature)
+- **Project codebase:** File structure, test patterns, build/config files
+- **User context:** Ordering preferences, scope decisions
+
+> **Important — Preserve traceability.** Each task must cross-reference the requirement(s) it satisfies and the design decisions it implements. Execute mode runs in separate sub-agents — tasks must carry enough context (requirement references, file targets, acceptance criteria) to be executable without re-reading the full requirements/design docs.
+
 ## Information to Collect
 
 ### From Requirements
@@ -55,6 +65,7 @@ Break the design into small, ordered, actionable implementation tasks that can b
 5. **File-aware:** Each task lists the files it will create or modify.
 6. **Traceable:** Each task references the requirement(s) it satisfies.
 7. **Checkpointed:** Add checkpoint tasks between phases to verify everything works before moving on.
+8. **Contract/test-before-implementation, by default:** Consult [best-practices.md](best-practices.md) when splitting a unit of work. For most feature tasks, split into a test sub-task before the implementation sub-task (TDD). For API/interface tasks, split into a contract/type-definition sub-task before the implementation sub-task. Only skip this split for trivial changes or explicit throwaway work — see best-practices.md → "When to Skip".
 
 ## Task Format
 
@@ -75,10 +86,12 @@ Mark completed tasks with `[x]`:
   - [x] 1.1 [Completed sub-task]
 ```
 
-Optional tasks (tests, nice-to-haves) use `*` suffix:
+Optional tasks (nice-to-haves, not core coverage) use `*` suffix:
 ```markdown
   - [ ]* 1.3 Write property test for [feature]
 ```
+
+Note: the primary test for a piece of behavior is NOT optional — per [best-practices.md](best-practices.md), it comes *before* the implementation sub-task it validates, and isn't marked `*`. Reserve `*` for supplementary tests (property tests, extra edge cases) beyond the core test-first pair.
 
 ## What to Confirm with User
 
@@ -125,10 +138,10 @@ Save a master index + per-module sub-files:
 ### Phase 2: [Phase Name]
 
 - [ ] 3. [Task title]
-  - [ ] 3.1 [Sub-task]
+  - [ ] 3.1 Write test for [feature]
     - _Requirements: [Requirement#.Criteria#]_
-  - [ ]* 3.2 Write test for [feature]
-    - _Validates: Requirements [Requirement#.Criteria#]_
+  - [ ] 3.2 Implement [feature] to satisfy 3.1
+    - _Requirements: [Requirement#.Criteria#]_
 
 - [ ] 4. [Task title]
   - [ ] 4.1 [Sub-task]
@@ -194,11 +207,11 @@ Complete implementation of [feature]. Tasks are split per module, ordered by dep
     - _Requirements: [Module] [Requirement#.Criteria#]_
   - [ ] 1.2 [Sub-task]
     - _Requirements: [Module] [Requirement#.Criteria#]_
-  - [ ]* 1.3 Write test for [feature]
-    - _Validates: Requirements [Module] [Requirement#.Criteria#]_
 
 - [ ] 2. [Task title]
-  - [ ] 2.1 [Sub-task]
+  - [ ] 2.1 Write test for [feature]
+    - _Requirements: [Module] [Requirement#.Criteria#]_
+  - [ ] 2.2 Implement [feature] to satisfy 2.1
     - _Requirements: [Module] [Requirement#.Criteria#]_
 
 - [ ] 3. Checkpoint — Verify [module] tests pass
@@ -210,3 +223,7 @@ Complete implementation of [feature]. Tasks are split per module, ordered by dep
 → Summarize the task list and ask: "Tasks look good? Ready to start executing, or want to adjust anything?"
 
 → Proceed to **Execute Mode**
+
+## See Also
+
+[best-practices.md](best-practices.md) — task sequencing guidance by category (TDD, contract-first APIs, migrations, refactoring, etc.), used when deciding how to split and order tasks above.

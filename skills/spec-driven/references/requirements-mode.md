@@ -14,6 +14,15 @@ Transform a vague idea or feature request into a clear, structured set of requir
 6. Identify edge cases, constraints, and assumptions
 7. Produce a formal requirements document (with sub-files for large specs)
 
+## Inputs
+
+This mode reads from:
+
+- **User request:** The original goal, problem statement, or feature description
+- **Project codebase:** Existing code, patterns, conventions, tech stack (explore via Glob/Grep/Read)
+
+> **Important — Preserve original references.** Record any URLs, external documentation, referenced files, or key code locations consulted during analysis in the output artifact. Downstream modes (Design, Tasks, Execute) run in separate sub-agents and will NOT have access to the original conversation. The artifact must be self-sufficient for traceability.
+
 ## Information to Collect
 
 ### From the User
