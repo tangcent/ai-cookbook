@@ -14,6 +14,16 @@ Define the technical architecture and approach for implementing the requirements
 6. Identify technical risks and mitigation strategies
 7. Produce a formal design document (with sub-files for large specs)
 
+## Inputs
+
+This mode reads from:
+
+- **Upstream artifact:** `.spec/{spec_name}/requirements.md` (and sub-files if large feature)
+- **Project codebase:** Existing patterns, models, APIs, conventions, dependencies
+- **User context:** Preferences, architectural decisions already made
+
+> **Important — Preserve original references.** Design artifact should reference the requirements it's based on and record any URLs, external docs, or key code files consulted. Downstream modes (Tasks, Execute) run in separate sub-agents — the design document must be self-sufficient for traceability back to original inputs.
+
 ## Information to Collect
 
 ### From Requirements
