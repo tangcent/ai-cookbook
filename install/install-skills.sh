@@ -2,7 +2,9 @@
 # install-skills.sh — Install skills into AI tool skill directories.
 #
 # After copying, rewrites `scripts/` references in SKILL.md to absolute paths
-# so the AI agent can invoke them from any working directory.
+# so the AI agent can invoke them from any working directory, and inserts the
+# target tool's runtime note (install/<tool>/runtime-note.md) into any SKILL.md
+# that relies on sub-agent conventions the tool spells differently.
 #
 # Usage:
 #   bash install/install-skills.sh [tool] [skill ...]
@@ -10,8 +12,10 @@
 # Examples:
 #   bash install/install-skills.sh kiro                  # all skills into Kiro
 #   bash install/install-skills.sh codex                 # all skills into Codex
+#   bash install/install-skills.sh workbuddy             # all skills into WorkBuddy
 #   bash install/install-skills.sh all                   # all skills into all tools
 #   bash install/install-skills.sh kiro mysql-cli        # one skill into Kiro
+#   bash install/install-skills.sh workbuddy spec-driven # one skill into WorkBuddy
 
 set -euo pipefail
 
@@ -20,7 +24,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SKILLS_SRC="$REPO_ROOT/skills"
 
 # ── Tool → skill directory mapping ────────────────────────────────────
-ALL_TOOLS="cursor kiro claude codex cline opencode antigravity trae trae-cn"
+ALL_TOOLS="cursor kiro claude codex cline opencode antigravity trae trae-cn workbuddy"
 
 tool_dir() {
   case "$1" in
@@ -33,6 +37,7 @@ tool_dir() {
     antigravity)  echo "$HOME/.gemini/antigravity/skills" ;;
     trae)         echo "$HOME/.trae/skills" ;;
     trae-cn)      echo "$HOME/.trae-cn/skills" ;;
+    workbuddy)    echo "$HOME/.workbuddy/skills" ;;
     *) return 1 ;;
   esac
 }
@@ -85,6 +90,36 @@ rewrite_script_paths() {
   fi
 }
 
+# ── Insert tool-specific runtime note ─────────────────────────────────
+# A tool can ship install/<tool>/runtime-note.md describing how its runtime
+# deviates from the upstream conventions (e.g. WorkBuddy names the sub-agent
+# tool `Agent`, not `Task`). The note is inserted right after the YAML
+# frontmatter — prepending it would break frontmatter parsing. Only SKILL.md
+# files that spawn sub-agents (they declare `subagent_type`) get the note.
+apply_runtime_note() {
+  local skill_md="$1"
+  local tool="$2"
+  local note="$SCRIPT_DIR/$tool/runtime-note.md"
+
+  [ -f "$note" ] || return 0
+  grep -q 'subagent_type' "$skill_md" || return 0
+
+  # Last line of the frontmatter block (tolerates CRLF)
+  local fm_end
+  fm_end="$(awk 'NR>1 { line=$0; sub(/\r$/, "", line); if (line=="---") { print NR; exit } }' "$skill_md")"
+  [ -n "$fm_end" ] || return 0
+
+  local tmp
+  tmp="$(mktemp)"
+  {
+    head -n "$fm_end" "$skill_md"
+    printf '\n'
+    cat "$note"
+    tail -n "+$((fm_end + 1))" "$skill_md"
+  } > "$tmp"
+  mv "$tmp" "$skill_md"
+}
+
 # ── Install ───────────────────────────────────────────────────────────
 installed=0
 for tool in $TARGET_TOOLS; do
@@ -104,6 +139,9 @@ for tool in $TARGET_TOOLS; do
 
     # Rewrite scripts/ to absolute paths
     rewrite_script_paths "$dest/SKILL.md"
+
+    # Insert the tool's runtime note when the runtime deviates
+    apply_runtime_note "$dest/SKILL.md" "$tool"
 
     echo "  [ok]   $skill → $dest"
     installed=$((installed + 1))
