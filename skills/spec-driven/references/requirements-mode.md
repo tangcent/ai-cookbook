@@ -7,7 +7,7 @@ Transform a vague idea or feature request into a clear, structured set of requir
 ## What This Mode Does
 
 1. Understand the user's goal and context
-2. Ask clarifying questions to fill gaps
+2. Identify gaps that need clarification — return them as `open_questions` (see Interaction Protocol); never ask the user directly
 3. Survey the existing codebase for relevant code, patterns, and constraints
 4. Identify functional and non-functional requirements
 5. Define acceptance criteria using EARS-style language
@@ -41,9 +41,9 @@ This mode reads from:
 - Existing tests or documentation that provide context
 - Naming conventions and project structure
 
-## Clarifying Questions to Ask
+## Clarifying Questions
 
-Ask these in a conversational way, not as a checklist dump. Prioritize the most impactful questions first.
+Workers never ask the user directly — unresolved questions go into `open_questions` in the return summary, and the orchestrator asks them at the requirements gate. Prioritize the most impactful questions first.
 
 - "What's the main problem this solves for the user?"
 - "Are there existing features this interacts with?"
@@ -54,14 +54,22 @@ Ask these in a conversational way, not as a checklist dump. Prioritize the most 
 
 Limit to 3-5 questions per round. Don't overwhelm the user.
 
-## What to Confirm with User
+## Interaction Protocol
 
-Before finalizing requirements:
+Requirements workers never talk to the user directly — the orchestrator (main session) owns all user interaction, and the requirements gate cannot be skipped.
+
+Gate confirmations owned by the orchestrator:
 
 1. The list of functional requirements — "Here's what I understand we're building. Anything missing or wrong?"
 2. Priority classification — "I've marked these as must-have and these as nice-to-have. Agree?"
 3. Out-of-scope items — "These are explicitly NOT part of this work. Correct?"
 4. Key assumptions — "I'm assuming X and Y. Let me know if that's off."
+
+Worker rules:
+
+- If any of the above is still unresolved when the work finishes, record it in `open_questions` in the return summary; the orchestrator relays it to the user at the gate.
+- If questions remain open but the document is still writable, write a best-effort version anyway: mark the affected parts as assumptions, list the questions in the document's `Open Questions` section, and repeat them in the return summary. Do not block on unanswered questions.
+- If the orchestrator's handoff already contains the user's answers, apply them without asking again.
 
 ## Writing Style: EARS Pattern
 
@@ -89,6 +97,15 @@ Save a single `requirements.md` to `.spec/<spec-name>/requirements.md`
 Save a master index + per-module sub-files:
 - `.spec/<spec-name>/requirements.md` — master index with glossary and module table
 - `.spec/<spec-name>/requirements-<module>.md` — detailed requirements per module
+
+## Large Spec Parallelization
+
+For large specs, requirements elaboration runs master-then-parallel:
+
+1. **Master skeleton first:** One worker (or the orchestrator) writes `requirements.md` with only the global structure — introduction, glossary, module breakdown, cross-cutting concerns, and out-of-scope items. The glossary is the contract every module worker must use.
+2. **Gate:** The orchestrator shows the skeleton to the user for confirmation (module split, scope, glossary).
+3. **Per-module workers in parallel:** One worker per module, all dispatched in the same message. Each worker writes only its own `requirements-<module>.md`, using the master glossary and EARS conventions, and returns per the return contract.
+4. **Consistency pass:** The orchestrator checks terminology against the master glossary, cross-module references, and duplicate or conflicting requirements, then runs `check <spec>` to confirm the module index links resolve and re-dispatches the offending module on conflicts.
 
 ## Template: requirements.md (Small Feature)
 
@@ -209,6 +226,8 @@ Each sub-requirement file follows the same EARS patterns and glossary terms defi
 
 ## Next Step
 
-→ Summarize the requirements and ask: "Requirements look good? Ready to move to Design, or want to revise anything?"
+→ Return to the orchestrator per the return contract (`files_written`, `key_decisions`, `open_questions`), including the requirement count in the summary.
 
-→ Proceed to **Design Mode**
+→ The orchestrator spot-checks the document, then asks at the gate: "Requirements look good? Ready to move to Design, or want to revise anything?"
+
+→ On approval, proceed to **Design Mode**
