@@ -26,7 +26,7 @@ This mode reads from:
 - **User request:** The goal, scope, and any constraints
 - **Project codebase:** Relevant code, patterns, conventions, affected files
 
-> **Important — Preserve original references.** Record URLs, external docs, and key files consulted in the plan. Execute mode runs in a separate sub-agent — the plan must be self-sufficient with enough context (approach, acceptance criteria, file targets) that the executor doesn't need the original conversation.
+> **Important — Preserve original references.** Record URLs, external docs, and key files consulted in the plan. Execute mode dispatches task workers as stateless sub-agents — the plan must be self-sufficient with enough context (approach, acceptance criteria, file targets) that the executor doesn't need the original conversation.
 
 ## Information to Collect
 
@@ -44,9 +44,14 @@ Keep it conversational. Plan mode is meant to be fast — 2-3 questions max.
 - Files that will be affected
 - Dependencies and integration points
 
-## What to Confirm with User
+## Interaction Protocol
 
-Before finalizing the plan:
+Plan workers never talk to the user directly — the orchestrator (main session) owns all user interaction.
+
+- Keep clarification to 2-3 questions max; unresolved ones go into `open_questions` in the return summary, and the orchestrator asks them at the plan gate.
+- If the orchestrator's handoff already contains answers (goal, scope, preferences), apply them without asking again.
+
+Gate confirmations owned by the orchestrator:
 
 1. **Approach** — "Here's how I'd approach this: [brief summary]. Sound right?"
 2. **Task list** — "Here are [N] tasks. Anything to add or remove?"
@@ -56,6 +61,8 @@ One round of confirmation is usually enough for Plan mode.
 ## Output
 
 Save to `.spec/<spec-name>/plan.md`
+
+`plan.md` uses the same task syntax as `tasks.md`, so the Spec Tools work on it: `status`, `done`, and `trace` behave identically. `dag` treats a plan as a serial chain (plans carry no `Files:` lines), which matches how Plan mode is meant to be executed. `check` only requires `Files:` lines in `tasks*.md`, so a plan is not penalized for omitting them.
 
 ## Template: plan.md
 
@@ -109,6 +116,8 @@ Include inline design notes where relevant rather than a separate design doc.]
 
 ## Next Step
 
-→ Summarize the plan and ask: "Plan looks good? Ready to start executing?"
+→ Return to the orchestrator per the return contract (`files_written`, `key_decisions`, `open_questions`).
 
-→ Proceed to **Execute Mode**
+→ The orchestrator spot-checks the plan, then asks at the gate: "Plan looks good? Ready to start executing?"
+
+→ On approval, proceed to **Execute Mode**

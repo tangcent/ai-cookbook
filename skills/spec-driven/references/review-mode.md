@@ -21,15 +21,21 @@ Because a new thread has zero memory of prior decisions, treat every review as i
 
 1. **Discover** — scan `.spec/` for existing spec directories. If the target spec isn't obvious from the user's message, list what was found and ask which one.
 2. **Load fully from disk** — read `requirements.md`, `design.md`, `tasks.md`/`plan.md` and all sub-files in full. Do not infer content from filenames, headers alone, or partial reads.
-3. **Inventory** — note which artifacts exist, which are missing entirely, and which are partially filled (e.g. `design.md` still has unresolved items in "Open Questions", or a module in the index has no sub-file yet).
-4. **Cross-check traceability**:
-   - Every task cites a requirement/design reference — flag orphan tasks (cite nothing, or cite something that doesn't exist)
-   - Every requirement has corresponding design coverage — flag requirements with no design section addressing them
-   - Every design decision is compatible with the requirements — flag contradictions (e.g. design proposes something requirements marked "Out of Scope")
-5. **Check currency against the codebase** — for each file, API, model, or convention referenced in `design.md`/`tasks.md`, verify it still exists and still matches the description. Code may have moved on since the spec was written (refactors, renames, deleted modules).
-6. **Check execution progress** — read checkbox state in `tasks.md`. For tasks marked `[x]`, spot-check the actual code to confirm the implementation matches what the task described — don't trust the checkbox alone.
+3. **Inventory** — run `status <spec>` for which artifacts exist, which are missing, and which are partially filled (e.g. `design.md` still has unresolved items in "Open Questions", or a module in the index has no sub-file yet). Reading files in full is still required for substance; the tool only removes the counting work
+4. **Cross-check traceability** — run `trace <spec>` for orphan tasks (cite nothing, or cite something that doesn't exist) and uncovered acceptance criteria; then judge the semantic side by hand (design coverage per requirement, contradictions such as design proposing something requirements marked "Out of Scope")
+5. **Check currency against the codebase** — for each file, API, model, or convention referenced in `design.md`/`tasks.md`, verify it still exists and still matches the description. Code may have moved on since the spec was written (refactors, renames, deleted modules). `check <spec> --paths` covers the mechanical half (referenced paths that no longer exist); the rest needs real reading
+6. **Check execution progress** — `status <spec>` gives checkbox counts per file; for tasks marked `[x]`, spot-check the actual code to confirm the implementation matches what the task described — don't trust the checkbox alone
 7. **Surface findings** — group into: Gaps, Inconsistencies, Stale References, Progress Mismatches.
-8. **Recommend next action** — don't just report. Propose the smallest fix path for each finding (re-spawn Requirements/Design/Tasks mode scoped to the specific issue, not a full regeneration).
+8. **Recommend next action** — don't just report. Propose the smallest fix path for each finding (re-dispatch Requirements/Design/Tasks mode scoped to the specific issue, not a full regeneration).
+
+## Orchestration
+
+Review runs under the same orchestrator/worker split as the other modes:
+
+- **Mechanical passes first:** run `status <spec>`, `trace <spec>`, and `check <spec> --paths` in the orchestrator. Their output becomes the skeleton of the findings report (inventory, orphan references, uncovered criteria, missing paths) and is free of context cost.
+- **Analysis:** The orchestrator dispatches one analysis agent (Agent tool, `general-purpose` — or `Explore` for a read-only pass) to judge what the tools can't: requirement→design coverage, contradictions, and whether completed tasks actually match the code. It returns a structured findings list.
+- **Currency checks for large specs:** Dispatch one read-only `Explore` agent per module, all in the same message, to verify referenced files/APIs/models against the codebase in parallel; the orchestrator merges their findings into the report.
+- **Fixes:** Never regenerate in bulk. For each finding, re-dispatch the mode that owns the artifact (Requirements, Design, or Tasks), scoped to the specific issue, with the finding quoted in the handoff.
 
 ## Inputs
 
@@ -83,6 +89,6 @@ Review Mode produces a report. It is **not saved to disk by default** — only p
 
 ## Next Step
 
-- If issues were found and the user wants fixes → re-spawn the specific mode agent(s) needed (Requirements, Design, or Tasks), scoped to just the flagged issue — not a full re-do of that mode
+- If issues were found and the user wants fixes → re-dispatch the specific mode agent(s) needed (Requirements, Design, or Tasks), scoped to just the flagged issue — not a full re-do of that mode
 - If everything checks out → hand off to **Execute Mode** to continue from the next incomplete task
 - If the user only wanted a health check → just report; make no changes

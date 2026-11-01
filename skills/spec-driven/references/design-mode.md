@@ -70,15 +70,26 @@ For each significant decision, present options with trade-offs:
 
 Don't present trivial decisions. Focus on choices that affect architecture, performance, or maintainability.
 
-## What to Confirm with User
+Unresolved decisions go into `open_questions` verbatim in the same options + recommendation shape. Do not wait for answers during the run — write the document first using the recommendation as the tentative default, mark it as pending, and let the design gate resolve it.
 
-Before finalizing design:
+## Interaction Protocol
+
+Design workers never talk to the user directly — the orchestrator (main session) owns all user interaction, and the design gate cannot be skipped.
+
+Gate confirmations owned by the orchestrator:
 
 1. **Overall approach** — "Here's the high-level architecture. Does this direction make sense?"
 2. **Key design decisions** — Present options for non-obvious choices and get user's pick
 3. **Data model changes** — "These are the schema/model changes needed. Any concerns?"
 4. **API contracts** — "Here are the proposed interfaces. Anything to adjust?"
 5. **Risk items** — "These are the technical risks I see. Anything else you're worried about?"
+
+Worker rules:
+
+- Any unresolved confirmation goes into `open_questions` in the return summary; the orchestrator relays it to the user at the design gate.
+- Key decisions must be returned in options + recommendation shape (Option A / Option B / Recommendation), exactly as formatted above, so the orchestrator can relay them without reformatting.
+- When re-dispatched with the user's picks, write the chosen options into `design.md` as final decisions.
+- If the handoff already contains the user's choices, apply them without asking again.
 
 ## Output
 
@@ -91,6 +102,15 @@ Save a single `design.md` to `.spec/<spec-name>/design.md`
 Save a master index + per-module sub-files:
 - `.spec/<spec-name>/design.md` — master index with architecture overview and module table
 - `.spec/<spec-name>/design-<module>.md` — detailed design per module
+
+## Large Spec Parallelization
+
+For large specs, design work runs master-then-parallel:
+
+1. **Master skeleton first:** One worker (or the orchestrator) writes `design.md` with only the global structure — architecture overview, design principles, package structure, module breakdown, and cross-cutting design decisions. Cross-cutting decisions are the contract every module worker must follow.
+2. **Gate:** The orchestrator shows the skeleton to the user for confirmation (architecture direction, module split, cross-cutting decisions).
+3. **Per-module workers in parallel:** One worker per module, all dispatched in the same message. Each worker writes only its own `design-<module>.md`, conforming to the cross-cutting decisions, and returns per the return contract.
+4. **Consistency pass:** The orchestrator checks inter-module interface alignment (signatures, data shapes, error contracts) and terminology, then runs `check <spec>` to confirm the module index links resolve, and re-dispatches the offending module on conflicts.
 
 ## Template: design.md (Small Feature)
 
@@ -233,6 +253,8 @@ path/to/feature/
 
 ## Next Step
 
-→ Summarize the design and ask: "Design looks solid? Ready to break this into tasks, or want to revise anything?"
+→ Return to the orchestrator per the return contract (`files_written`, `key_decisions`, `open_questions`), with key decisions in options + recommendation shape.
 
-→ Proceed to **Tasks Mode**
+→ The orchestrator spot-checks the design, then asks at the gate: "Design looks solid? Ready to break this into tasks, or want to revise anything?"
+
+→ On approval, proceed to **Tasks Mode**
