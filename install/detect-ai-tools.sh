@@ -93,6 +93,14 @@ else
   echo "trae-cn: not found"
 fi
 
+# --- WorkBuddy ---
+if [ -d "$HOME/.workbuddy" ]; then
+  echo "workbuddy: available"
+  found=1
+else
+  echo "workbuddy: not found"
+fi
+
 echo ""
 if [ "$found" -eq 1 ]; then
   echo "At least one AI tool detected."

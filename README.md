@@ -16,7 +16,7 @@ cd ai-cookbook
 
 ## Install
 
-Install MCPs, CLIs, and Skills into your AI coding tools (Cursor, Kiro, Claude Code, Codex, Cline, OpenCode, Antigravity, Trae, Trae CN) with the interactive guide:
+Install MCPs, CLIs, and Skills into your AI coding tools (Cursor, Kiro, Claude Code, Codex, Cline, OpenCode, Antigravity, Trae, Trae CN, WorkBuddy) with the interactive guide:
 
 → [install/INSTALL.md](install/INSTALL.md)
 

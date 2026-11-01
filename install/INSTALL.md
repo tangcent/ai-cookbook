@@ -34,6 +34,7 @@ Supported tools:
 | Antigravity | IDE | `~/.gemini/antigravity/mcp_config.json` |
 | Trae | IDE | `~/Library/Application Support/Trae/User/mcp.json` |
 | Trae CN | IDE | `~/Library/Application Support/Trae CN/User/mcp.json` |
+| WorkBuddy | Desktop app | `~/.workbuddy/mcp.json` (key: `mcpServers`) |
 
 ## Step 1.5: Collect Existing MCP Variables
 
@@ -76,7 +77,7 @@ Ask yourself (or let the agent ask you):
 | Option | Description |
 |--------|-------------|
 | `all` | Install into all detected AI tools |
-| `<specific>` | Install into a specific tool (e.g. `kiro`, `claude`, `codex`, `cline`) |
+| `<specific>` | Install into a specific tool (e.g. `kiro`, `claude`, `codex`, `cline`, `workbuddy`) |
 
 ## Step 4: Run Installation
 
@@ -116,6 +117,9 @@ Use the install script to copy skills and resolve script paths:
 ```bash
 # Example: install only audit-sql into Kiro
 bash install/install-skills.sh kiro audit-sql
+
+# Example: install only spec-driven into WorkBuddy
+bash install/install-skills.sh workbuddy spec-driven
 ```
 
 To install a skill into all detected tools at once:
@@ -170,6 +174,7 @@ Each tool has its own README with full instructions for installing CLIs, MCPs, a
 | Antigravity | `python3 install/antigravity/merge-mcp.py` | [install/antigravity/README.md](antigravity/README.md) |
 | Trae | `python3 install/trae/merge-mcp.py` | [install/trae/README.md](trae/README.md) |
 | Trae CN | `python3 install/trae-cn/merge-mcp.py` | [install/trae-cn/README.md](trae-cn/README.md) |
+| WorkBuddy | — (skills only) | [install/workbuddy/README.md](workbuddy/README.md) |
 
 > **For AI agents:** When installing a single item, use the patterns above. For tool-specific details (skill directory paths, config formats), read that tool's README (e.g. `install/kiro/README.md`).
 
