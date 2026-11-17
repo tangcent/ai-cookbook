@@ -72,6 +72,19 @@ Operate GitHub with the `gh` CLI for repositories, pull requests, issues, releas
 <!-- AI: Run install/INSTALL.md to install the github-cli skill -->
 
 
+### review-pr
+
+Review a GitHub pull request end-to-end: land the code in a local worktree, judge whether the problem is real and the fix stays in scope, verify by running builds and tests, then report graded findings with a file-level change matrix.
+
+- Four-question judgment (intent, reality, solution, scope) before reading diff details — review the change, not just the code
+- Land the PR in a local worktree and reproduce on the base branch; every conclusion backed by files on disk and commands actually run
+- Squash merge by default; when findings exist, ask whether to autofix-and-merge or leave graded feedback for the author
+- Handle stacked PRs by isolating each PR's own increment
+
+> 💬 Tell your AI: "install review-pr"
+<!-- AI: Run install/INSTALL.md to install the review-pr skill -->
+
+
 ### gitlab-cli
 
 Operate GitLab with the `glab` CLI for repositories, merge requests, issues, pipelines, releases, and API calls.
