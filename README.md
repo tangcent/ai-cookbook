@@ -80,6 +80,7 @@ Review a GitHub pull request end-to-end: land the code in a local worktree, judg
 - Land the PR in a local worktree and reproduce on the base branch; every conclusion backed by files on disk and commands actually run
 - Squash merge by default; when findings exist, ask whether to autofix-and-merge or leave graded feedback for the author
 - Handle stacked PRs by isolating each PR's own increment
+- Review multiple PRs concurrently with one subagent per PR, then aggregate their reports into a single roll-up
 
 > 💬 Tell your AI: "install review-pr"
 <!-- AI: Run install/INSTALL.md to install the review-pr skill -->
