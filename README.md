@@ -41,7 +41,6 @@ Use the curl installer above when you need full coverage:
 
 | | curl installer | `npx skills add` |
 |---|---|---|
-| WorkBuddy support | Yes | No (not in the CLI's agent list) |
 | `scripts/` rewritten to absolute paths | Yes | No |
 | Per-tool runtime notes injected | Yes | No |
 

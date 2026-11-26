@@ -26,7 +26,7 @@ Without a tool argument, the installer detects installed tools and prompts for a
 
 Supported tools: `cursor`, `kiro`, `claude`, `codex`, `cline`, `opencode`, `antigravity`, `trae`, `trae-cn`, `workbuddy`. Set `AI_COOKBOOK_ARCHIVE_URL` to install from a mirror instead of GitHub.
 
-`npx skills add tangcent/ai-cookbook` works as well, but its agent list does not include WorkBuddy and it skips the script path rewriting and runtime notes described above.
+`npx skills add tangcent/ai-cookbook` works as well, but it does not cover every tool listed above and it skips the script path rewriting and runtime notes described above.
 
 ---
 
