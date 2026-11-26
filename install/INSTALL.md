@@ -4,6 +4,36 @@ Interactive guide for installing CLIs, MCPs, and Skills from this cookbook into 
 
 > Install targets global paths (`~/`) so MCPs and skills are available across all projects.
 
+## One-Command Skill Install
+
+Install all skills without cloning the repository:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tangcent/ai-cookbook/main/install/install.sh | bash
+```
+
+The installer downloads the repository archive to a temporary directory and delegates to `install/install-skills.sh`, so `scripts/` paths and per-tool runtime notes are handled the same way as a local install.
+
+Pass a tool, optionally followed by skill names, to skip the prompt:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tangcent/ai-cookbook/main/install/install.sh | bash -s -- kiro
+curl -fsSL https://raw.githubusercontent.com/tangcent/ai-cookbook/main/install/install.sh | bash -s -- workbuddy review-pr
+curl -fsSL https://raw.githubusercontent.com/tangcent/ai-cookbook/main/install/install.sh | bash -s -- all
+```
+
+Without a tool argument, the installer detects installed tools and prompts for a comma-separated selection (`all` is accepted). In a non-interactive shell it uses the detected tools, or all supported tools when none are detected. Skills default to all; pass names after the tool to install a subset.
+
+Supported tools: `cursor`, `kiro`, `claude`, `codex`, `cline`, `opencode`, `antigravity`, `trae`, `trae-cn`, `workbuddy`. Set `AI_COOKBOOK_ARCHIVE_URL` to install from a mirror instead of GitHub.
+
+`npx skills add tangcent/ai-cookbook` works as well, but its agent list does not include WorkBuddy and it skips the script path rewriting and runtime notes described above.
+
+---
+
+## Manual Setup
+
+The steps below cover prerequisites, MCPs, CLIs, and per-tool details.
+
 ## Step 0: Check Prerequisites
 
 Make sure the required runtimes are installed:
