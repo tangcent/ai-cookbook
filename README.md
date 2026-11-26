@@ -4,14 +4,23 @@ A curated collection of AI skills, practical tips, and Markdown documentation â€
 
 ## Quick Start
 
-1. Clone this repository
+Install all skills with one command. It detects the AI tools on your machine and asks which ones to install into:
 
 ```bash
-git clone https://github.com/tangcent/ai-cookbook.git
-cd ai-cookbook
+curl -fsSL https://raw.githubusercontent.com/tangcent/ai-cookbook/main/install/install.sh | bash
 ```
 
-2. Tell your AI: "install ai-cookbook"
+Skip the prompt by passing a tool, optionally followed by skill names:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tangcent/ai-cookbook/main/install/install.sh | bash -s -- kiro
+curl -fsSL https://raw.githubusercontent.com/tangcent/ai-cookbook/main/install/install.sh | bash -s -- workbuddy review-pr
+curl -fsSL https://raw.githubusercontent.com/tangcent/ai-cookbook/main/install/install.sh | bash -s -- all
+```
+
+In a non-interactive shell, skills go to the detected tools (or every supported tool if none are detected).
+
+Prefer to let your AI handle it? Clone the repository and tell your AI: "install ai-cookbook".
 <!-- AI: Run install/INSTALL.md to install all skills and MCPs -->
 
 ## Install
@@ -19,6 +28,21 @@ cd ai-cookbook
 Install MCPs, CLIs, and Skills into your AI coding tools (Cursor, Kiro, Claude Code, Codex, Cline, OpenCode, Antigravity, Trae, Trae CN, WorkBuddy) with the interactive guide:
 
 â†’ [install/INSTALL.md](install/INSTALL.md)
+
+### One-command installer vs `npx skills`
+
+This repository follows the standard `skills/<name>/SKILL.md` layout, so the third-party CLI works too:
+
+```bash
+npx skills add tangcent/ai-cookbook
+```
+
+Use the curl installer above when you need full coverage:
+
+| | curl installer | `npx skills add` |
+|---|---|---|
+| `scripts/` rewritten to absolute paths | Yes | No |
+| Per-tool runtime notes injected | Yes | No |
 
 ## Skills
 
