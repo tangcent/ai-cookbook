@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: Reviews a GitHub pull request end-to-end - lands the code in a local worktree, judges whether the problem is real and the fix stays in scope, verifies by running builds and tests, reports graded findings, then either squash-merges or asks whether to autofix-and-merge vs. leave a message for the author. Invoke when the user asks to review a PR, check a pull request, or decide whether to merge.
+description: Reviews GitHub pull requests end-to-end - lands the code in a local worktree, judges whether the problem is real and the fix stays in scope, verifies by running builds and tests, reports graded findings, then either squash-merges or asks whether to autofix-and-merge vs. leave a message for the author. For multiple PRs, fans out one subagent per PR concurrently and aggregates the reports. Invoke when the user asks to review PRs, check a pull request, or decide whether to merge.
 ---
 
 # Review PR
@@ -10,6 +10,59 @@ description: Reviews a GitHub pull request end-to-end - lands the code in a loca
 Judge the change before the code. A PR that fixes a non-existent problem, or rewrites unrelated modules, is a bad PR however clean the diff looks. Every conclusion must be backed by files on disk and commands actually run — not by remote file blobs alone.
 
 Phases 1-4 answer the four judgment questions (intent, reality, solution, scope), Phase 5 reviews details, Phase 7 reports. Phases 0 and 6 are non-negotiable: land the code locally, and verify by running it. Phase 8 is the disposition decision: prefer squash merge, and when findings exist, ask the user whether to autofix-and-merge or leave the author a message.
+
+When the user asks to review **multiple PRs**, do not review them one by one in the main thread. Use Multi-PR Mode below: the main agent only prepares and aggregates, while one subagent per PR does the full Phase 0-7 review concurrently. Phase 8 always stays with the main agent.
+
+---
+
+## Multi-PR Mode — fan out one subagent per PR
+
+Trigger: the user names two or more PRs, asks to review "these PRs", or asks for a batch review. A single PR continues with the normal Phase 0-8 flow.
+
+### Step 1 — Prepare (main agent)
+
+1. Resolve every PR number and its `baseRefName` with `gh pr view <N> --json number,title,body,baseRefName,headRefName,files`. Bases may differ; do not assume one base.
+2. Fetch **all** heads in one shot before fanning out, so subagents never contend on the same remote ref:
+   ```bash
+   git fetch origin refs/pull/<A>/head:refs/pr/<A> refs/pull/<B>/head:refs/pr/<B>
+   ```
+3. Detect stacked PRs now: compare `headRefName`/`baseRefName` and the `--name-only` diffs. Record which PRs stack on which, so a subagent can be told to exclude another PR's files from its scope (see Phase 0's `comm -13` trick).
+4. Assign each PR a **unique** worktree path, e.g. `<repo-root>/.worktrees/review-pr-<N>`. Two subagents must never share a worktree or a ref.
+
+### Step 2 — Launch all subagents concurrently (main agent)
+
+Spawn one subagent per PR **in the same message** (one tool call each) so they run in parallel. Use `general-purpose` (full tool access) and give each a unique `name` like `review-pr-<N>` so it can be messaged. The prompt must be self-contained — a subagent cannot see this conversation. Include:
+
+- repo absolute path, PR number, its base branch, the pre-fetched `refs/pr/<N>`, and its assigned worktree path;
+- the stacking context (which PRs it stacks on / which stack on it) and the files that belong to those PRs;
+- an instruction to read this skill file (`<skill-path>/SKILL.md`) and run **Phases 0-7 in full**, including real build/test commands from Phase 6 — no "LGTM" without a run;
+- a **hard stop at Phase 7**: no merge, no push, no `gh pr review`, no edit to any branch — those are external actions reserved for the main agent in Phase 8;
+- the exact report shape from Phase 7 (Verdict / Problem / Solution and scope matrix / Findings / Verification / Open questions), returned as its final message.
+
+### Step 3 — Aggregate (main agent)
+
+Collect every subagent's report. Build a roll-up table with one row per PR:
+
+| PR | Verdict | Blocking | Non-blocking | Verification |
+|----|---------|----------|--------------|--------------|
+| #N | ... | ... | ... | commands + pass/fail |
+
+- If a subagent fails, times out, or returns an opinion without verification commands, **re-run it for that PR** or report that PR as unverified — never fill the gap with a guess.
+- Each PR keeps its own full Phase 7 report below the roll-up; do not merge findings across PRs.
+
+### Step 4 — Disposition (main agent, Phase 8)
+
+Phase 8 is a single user decision covering all PRs, not one decision per subagent:
+
+- Group by verdict: clean PRs → confirm squash merges; PRs with Blocking/Non-blocking findings → ask autofix-vs-message **per PR**, using the Phase 8 option table.
+- Apply the chosen path for each PR yourself. Subagents never merge, push, or comment.
+- Remove every worktree you created when done.
+
+### Concurrency hygiene
+
+- Unique worktree path and ref per PR — no exceptions.
+- If two PRs touch the same module, their verification runs may race on build caches or ports; if a failure looks environmental, re-run that PR alone before calling it a real finding.
+- Keep the fan-out bounded; for a very large batch, split into waves rather than spawning an unbounded number of subagents.
 
 ---
 
